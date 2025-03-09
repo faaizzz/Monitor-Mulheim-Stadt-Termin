@@ -1,13 +1,11 @@
 import { test, expect } from '@playwright/test';
+import player from 'play-sound';
 
-test('Check for Terminvergabe title', async ({ page }) => {
-  await page.goto('https://terminvergabe.muelheim-ruhr.de/select2?md=9');
-  await expect(page).toHaveTitle(/Terminvergabe/);
-});
-
+const play = player();
 
 test('Ummeldung / Abmeldung Termin', async ({ page }) => {
   await page.goto('https://terminvergabe.muelheim-ruhr.de/select2?md=9');
+  await expect(page).toHaveTitle(/Terminvergabe/);
   await page.waitForSelector('#cookie_msg_btn_no', { timeout: 5000 });
   await page.click('#cookie_msg_btn_no');
 
@@ -29,8 +27,19 @@ test('Ummeldung / Abmeldung Termin', async ({ page }) => {
   await page.waitForSelector('text=Nächster Termin', { timeout: 5000 });
   const nextTerminExists = await page.isVisible('text=Nächster Termin');
   expect(nextTerminExists).toBeTruthy();
-  console.log('Next Termin exists');
-  
+  if (!nextTerminExists) {
+    console.log('Next Termin does not exist');
+  }
+  else {
+    console.log('Next Termin for Ummeldung / Abmeldung exists');
+    const content = await page.textContent('//*[@id="suggest_location_content"]/form/dl/dd[4]');
+    console.log('Date Time:', content);
+    console.log("\u0007");
+
+    play.play('media/beep.mp3', (err: any) => {
+      if (err) console.error("Error playing audio:", err);
+    });
+  }  
   
 
   await page.waitForTimeout(3000);
