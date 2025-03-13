@@ -3,7 +3,7 @@ import player from 'play-sound';
 
 const play = player();
 
-test('Ummeldung / Abmeldung Termin', async ({ page }) => {
+async function checkTermin(page) {
   await page.goto('https://terminvergabe.muelheim-ruhr.de/select2?md=9');
   await expect(page).toHaveTitle(/Terminvergabe/);
   await page.waitForSelector('#cookie_msg_btn_no', { timeout: 5000 });
@@ -29,8 +29,7 @@ test('Ummeldung / Abmeldung Termin', async ({ page }) => {
   expect(nextTerminExists).toBeTruthy();
   if (!nextTerminExists) {
     console.log('Next Termin does not exist');
-  }
-  else {
+  } else {
     console.log('Next Termin for Ummeldung / Abmeldung exists');
     const content = await page.textContent('//*[@id="suggest_location_content"]/form/dl/dd[4]');
     console.log('Date Time:', content);
@@ -39,10 +38,21 @@ test('Ummeldung / Abmeldung Termin', async ({ page }) => {
     play.play('media/beep.wav', (err: any) => {
       if (err) console.error("Error playing audio:", err);
     });
-  }  
-  
+  }
 
   await page.waitForTimeout(3000);
-  // Add further steps to verify the behavior after clicking the button
-});
+}
 
+test('Ummeldung / Abmeldung Termin', async ({ page }) => {
+  test.setTimeout(0); // Disable timeout for this test
+  let success = false;
+  while (!success) {
+    try {
+      await checkTermin(page);
+      success = true;
+    } catch (error) {
+      console.log('Retrying due to error:', error);
+      await page.waitForTimeout(60000); // wait for 1 minute before retrying
+    }
+  }
+});
