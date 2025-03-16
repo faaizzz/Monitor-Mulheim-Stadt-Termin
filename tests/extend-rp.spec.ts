@@ -3,7 +3,7 @@ import player from 'play-sound';
 
 const play = player();
 
-test('Extend RP Termin', async ({ page }) => {
+async function checkTermin(page) {
   await page.goto('https://terminvergabe.muelheim-ruhr.de/select2?md=9');
   await expect(page).toHaveTitle(/Terminvergabe/);
   await page.waitForSelector('#cookie_msg_btn_no', { timeout: 5000 });
@@ -46,13 +46,26 @@ test('Extend RP Termin', async ({ page }) => {
     console.log('Date Time:', content);
     console.log("\u0007");
 
-    play.play('media/beep.wav', (err: any) => {
+    play.play('media/beep-extended.mp3', (err: any) => {
       if (err) console.error("Error playing audio:", err);
     });
   }  
   
-
-  await page.waitForTimeout(3000);
   // Add further steps to verify the behavior after clicking the button
-});
+}
 
+
+test('Settlement Permit for Skilled Workers Termin', async ({ page }) => {
+  test.setTimeout(0); // Disable timeout for this test
+  let success = false;
+  while (!success) {
+    try {
+      await checkTermin(page);
+      success = true;
+    } catch (error) {
+      const currentTime = new Date().toLocaleString();
+      console.error(`[${currentTime}] Error checking termin:`, error.message);
+      await page.waitForTimeout(150000); // Wait for 5 minute before retrying
+    }
+  }
+});

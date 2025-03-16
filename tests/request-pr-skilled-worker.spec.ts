@@ -49,8 +49,9 @@ test('Settlement Permit for Skilled Workers Termin', async ({ page }) => {
       await checkTermin(page);
       success = true;
     } catch (error) {
-      console.error('Error checking termin:', error.message);
-      await page.waitForTimeout(60000); // Wait for 1 minute before retrying
+      const currentTime = new Date().toLocaleString();
+      console.error(`[${currentTime}] Error checking termin:`, error.message);
+      await page.waitForTimeout(150000); // Wait for 5 minute before retrying
     }
   }
 });
