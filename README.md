@@ -54,51 +54,29 @@ tests-examples/
    npm install
    ```
 
-## Running Tests
 
-To execute all tests, run:
-```bash
-npx playwright test
-```
+## Finding the Slots
 
-To run a specific test file, use:
-```bash
-npx playwright test tests/<test-file-name>.spec.ts
-```
+To execute specific use cases independently, use the following commands:
 
-## Running Specific Test Scenarios
-
-To execute specific test cases independently, use the following commands:
-
-- **Extend RP Test Case**:
+- **Extend RP Slots**:
   ```bash
   npx playwright test tests/extend-rp.spec.ts
   ```
 
-- **Ummeldung/Abmeldung Test Case**:
+- **Ummeldung/Abmeldung Slots**:
   ```bash
   npx playwright test tests/ummeldung-abmeldung.spec.ts
   ```
 
-- **Request PR Skilled Worker Test Case**:
+- **Request PR Skilled Worker Slots**:
   ```bash
   npx playwright test tests/request-pr-skilled-worker.spec.ts
   ```
 
-## Generating Reports
-
-After running tests, a report will be generated in the `playwright-report/` directory. To view the report, open the `index.html` file in a browser:
-```bash
-open playwright-report/index.html
-```
-
 ## Media Files
 
 The `media/` directory contains audio files used during test execution, such as notification sounds.
-
-## Example Tests
-
-The `tests-examples/` directory includes example tests, such as the `demo-todo-app`, to demonstrate Playwright's capabilities.
 
 ## Contributing
 
