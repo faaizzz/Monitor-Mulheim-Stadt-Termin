@@ -1,5 +1,9 @@
 import { test, expect } from '@playwright/test';
 import player from 'play-sound';
+import { execSync } from 'child_process';
+import { writeFileSync } from 'fs';
+import { tmpdir } from 'os';
+import { join } from 'path';
 
 const play = player();
 
@@ -38,6 +42,22 @@ async function checkTermin(page) {
     play.play('media/beep.wav', (err: any) => {
       if (err) console.error("Error playing audio:", err);
     });
+
+    try {
+
+      const inputMessage = "Next Termin for Ummeldung / Abmeldung exists. Date Time: " + content;
+      const tempFilePath = join(tmpdir(), 'shortcut-input.txt');
+      writeFileSync(tempFilePath, inputMessage, 'utf8');
+      
+      // Step 2: Run the shortcut using --input-path
+      const command = `shortcuts run "Send iMessage for Slot" --input-path "${tempFilePath}"`;
+      // const output = execSync(command, { encoding: 'utf8' });
+  
+      // console.log(`Shortcut Output: ${output}`);
+  } catch (error) {
+      console.error(`Error running shortcut: ${error}`);
+  }
+
   }
 
   await page.waitForTimeout(3000);

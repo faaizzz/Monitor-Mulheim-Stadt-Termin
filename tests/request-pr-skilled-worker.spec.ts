@@ -1,5 +1,9 @@
 import { test, expect } from '@playwright/test';
 import player from 'play-sound';
+import { execSync } from 'child_process';
+import { writeFileSync } from 'fs';
+import { tmpdir } from 'os';
+import { join } from 'path';
 
 const play = player();
 
@@ -36,6 +40,22 @@ async function checkTermin(page) {
     play.play('media/beep-extended.mp3', (err: any) => {
       if (err) console.error("Error playing audio:", err);
     });
+    try {
+
+      const inputMessage = "Next Termin for Request PR exists. Date Time: " + content;
+      const tempFilePath = join(tmpdir(), 'shortcut-input.txt');
+      writeFileSync(tempFilePath, inputMessage, 'utf8');
+      
+      // Step 2: Run the shortcut using --input-path
+      const command = `shortcuts run "Send iMessage for Slot" --input-path "${tempFilePath}"`;
+      // const output = execSync(command, { encoding: 'utf8' });
+  
+      // console.log(`Shortcut Output: ${output}`);
+  } catch (error) {
+      console.error(`Error running shortcut: ${error}`);
+  }
+
+
   } else {
     console.log('Next Termin for Settlement Permit does not exist');
   }
@@ -51,7 +71,7 @@ test('Settlement Permit for Skilled Workers Termin', async ({ page }) => {
     } catch (error) {
       const currentTime = new Date().toLocaleString();
       console.error(`[${currentTime}] Error checking termin:`, error.message);
-      await page.waitForTimeout(150000); // Wait for 5 minute before retrying
+      await page.waitForTimeout(60000); // Wait for 1 minute before retrying
     }
   }
 });
