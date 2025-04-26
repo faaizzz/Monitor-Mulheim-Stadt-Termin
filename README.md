@@ -66,6 +66,25 @@ To run a specific test file, use:
 npx playwright test tests/<test-file-name>.spec.ts
 ```
 
+## Running Specific Test Scenarios
+
+To execute specific test cases independently, use the following commands:
+
+- **Extend RP Test Case**:
+  ```bash
+  npx playwright test tests/extend-rp.spec.ts
+  ```
+
+- **Ummeldung/Abmeldung Test Case**:
+  ```bash
+  npx playwright test tests/ummeldung-abmeldung.spec.ts
+  ```
+
+- **Request PR Skilled Worker Test Case**:
+  ```bash
+  npx playwright test tests/request-pr-skilled-worker.spec.ts
+  ```
+
 ## Generating Reports
 
 After running tests, a report will be generated in the `playwright-report/` directory. To view the report, open the `index.html` file in a browser:
