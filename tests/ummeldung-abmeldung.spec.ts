@@ -10,14 +10,14 @@ const play = player();
 async function checkTermin(page) {
   await page.goto('https://terminvergabe.muelheim-ruhr.de/select2?md=9');
   await expect(page).toHaveTitle(/Terminvergabe/);
-  await page.waitForSelector('#cookie_msg_btn_no', { timeout: 5000 });
-  await page.click('#cookie_msg_btn_no');
+  await page.waitForSelector('//*[@id="cookie_msg_btn_no"]', { timeout: 5000 });
+  await page.click('//*[@id="cookie_msg_btn_no"]');
 
-  await page.waitForSelector('#concerns_accordion-6953', { timeout: 5000 });
-  await page.click('#concerns_accordion-6953');
+  await page.waitForSelector('//div[.//h3[contains(text(), "Meldewesen")]]', { timeout: 5000 });
+  await page.click('//div[.//h3[contains(text(), "Meldewesen")]]');
 
-  await page.waitForSelector('#button-plus-2538', { timeout: 5000 });
-  await page.click('#button-plus-2538');
+  await page.waitForSelector('#button-plus-2698', { timeout: 5000 });
+  await page.click('#button-plus-2698');
 
   await page.waitForSelector('#WeiterButton', { timeout: 5000 });
   await page.click('#WeiterButton');

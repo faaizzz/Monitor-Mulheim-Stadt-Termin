@@ -6,14 +6,12 @@ const play = player();
 test('Invite Friends and Family Termin', async ({ page }) => {
   await page.goto('https://terminvergabe.muelheim-ruhr.de/select2?md=9');
   await expect(page).toHaveTitle(/Terminvergabe/);
-  await page.waitForSelector('#cookie_msg_btn_no', { timeout: 5000 });
-  await page.click('#cookie_msg_btn_no');
 
-  await page.waitForSelector('#concerns_accordion-6956', { timeout: 5000 });
-  await page.click('#concerns_accordion-6956');
+  await page.getByRole('button', { name: 'Ablehnen' }).click({ timeout: 5000 });
 
-  await page.waitForSelector('#button-plus-2574', { timeout: 5000 });
-  await page.click('#button-plus-2574');
+  await page.getByRole('tab', { name: 'Allgemeine Ausländerangelegenheiten' }).click({ timeout: 5000 });
+
+  await page.getByRole('button', { name: 'Erhöhen der Anzahl des Anliegens Abgabe einer Verpflichtungserklärung' }).click({ timeout: 5000 });
 
   await page.waitForSelector('#WeiterButton', { timeout: 5000 });
   await page.click('#WeiterButton');
