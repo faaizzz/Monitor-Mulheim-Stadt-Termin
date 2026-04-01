@@ -4,6 +4,7 @@ import { execSync } from 'child_process';
 import { writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
+import { sendTelegramMessage } from '../src/telegram';
 
 const play = player();
 
@@ -45,6 +46,8 @@ async function checkTermin(page) {
     play.play('media/beep.wav', (err: any) => {
       if (err) console.error("Error playing audio:", err);
     });
+
+    await sendTelegramMessage(`Next Termin for Ummeldung / Abmeldung exists. Date Time: ${content}`);
 
     try {
 
