@@ -13,11 +13,11 @@ async function checkTermin(page) {
   // await page.waitForSelector('#cookie_msg_btn_no', { timeout: 5000 });
   // await page.click('#cookie_msg_btn_no');
 
-  await page.waitForSelector('#concerns_accordion-6956', { timeout: 5000 });
-  await page.click('#concerns_accordion-6956');
+  await page.waitForSelector('#concerns_accordion-8947', { timeout: 5000 });
+  await page.click('#concerns_accordion-8947');
 
-  await page.waitForSelector('#button-plus-2603', { timeout: 5000 });
-  await page.click('#button-plus-2603');
+  await page.waitForSelector('#button-plus-2742', { timeout: 5000 });
+  await page.click('#button-plus-2742');
 
   await page.waitForSelector('#WeiterButton', { timeout: 5000 });
   await page.click('#WeiterButton');

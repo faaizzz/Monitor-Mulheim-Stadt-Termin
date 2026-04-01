@@ -3,7 +3,7 @@ import player from 'play-sound';
 
 const play = player();
 
-test('Invite Friends and Family Termin', async ({ page }) => {
+async function checkTermin(page) {
   await page.goto('https://terminvergabe.muelheim-ruhr.de/select2?md=9');
   await expect(page).toHaveTitle(/Terminvergabe/);
 
@@ -34,9 +34,20 @@ test('Invite Friends and Family Termin', async ({ page }) => {
       if (err) console.error("Error playing audio:", err);
     });
   }  
-  
+}
 
-  await page.waitForTimeout(3000);
-  // Add further steps to verify the behavior after clicking the button
+test('Invite Friends and Family Termin', async ({ page }) => {
+  test.setTimeout(0); // Disable timeout for this test
+  let success = false;
+  while (!success) {
+    try {
+      await checkTermin(page);
+      success = true;
+    } catch (error) {
+      const currentTime = new Date().toLocaleString();
+      console.error(`[${currentTime}] Error checking termin:`, error.message);
+      await page.waitForTimeout(60000); // Wait for 1 minute before retrying
+    }
+  }
 });
 

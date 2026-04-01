@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "defaultMode": "bypassPermissions",
+    "allow": [
+      "Bash(npx playwright:*)",
+      "Bash(pkill -f \"playwright\")",
+      "Bash(node:*)"
+    ]
+  }
+}

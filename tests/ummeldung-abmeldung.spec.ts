@@ -13,8 +13,8 @@ async function checkTermin(page) {
   await page.waitForSelector('//*[@id="cookie_msg_btn_no"]', { timeout: 5000 });
   await page.click('//*[@id="cookie_msg_btn_no"]');
 
-  await page.waitForSelector('//div[.//h3[contains(text(), "Meldewesen")]]', { timeout: 5000 });
-  await page.click('//div[.//h3[contains(text(), "Meldewesen")]]');
+  await page.waitForSelector('#concerns_accordion-8944', { timeout: 5000 });
+  await page.click('#concerns_accordion-8944');
 
   await page.waitForSelector('#button-plus-2698', { timeout: 5000 });
   await page.click('#button-plus-2698');
@@ -22,9 +22,12 @@ async function checkTermin(page) {
   await page.waitForSelector('#WeiterButton', { timeout: 5000 });
   await page.click('#WeiterButton');
 
-  await page.click('//*[@id="TevisDialog"]/div/div/div[2]/div/div[1]/div/label');
-  await page.click('//*[@id="TevisDialog"]/div/div/div[2]/div/div[2]/div/label');
-  await page.click('//*[@id="TevisDialog"]/div/div/div[2]/div/div[3]/div/label');
+  const checkboxIds = await page.evaluate(() => {
+    return Array.from(document.querySelectorAll('#TevisDialog .doclist_item input[type="checkbox"]')).map(el => el.id);
+  });
+  for (const id of checkboxIds) {
+    await page.click(`label[for="${id}"]`);
+  }
 
   await page.click('//*[@id="OKButton"]');
 
