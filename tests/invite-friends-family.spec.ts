@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import player from 'play-sound';
+import { sendTelegramMessage } from '../src/telegram';
 
 const play = player();
 
@@ -33,6 +34,8 @@ async function checkTermin(page) {
     play.play('media/beep.wav', (err: any) => {
       if (err) console.error("Error playing audio:", err);
     });
+
+    await sendTelegramMessage(`Next Termin for Invite Friends and Family exists. Date Time: ${content}`);
   }  
 }
 
