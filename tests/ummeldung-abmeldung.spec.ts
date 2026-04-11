@@ -11,8 +11,8 @@ const play = player();
 async function checkTermin(page) {
   await page.goto('https://terminvergabe.muelheim-ruhr.de/select2?md=9');
   await expect(page).toHaveTitle(/Terminvergabe/);
-  await page.waitForSelector('//*[@id="cookie_msg_btn_no"]', { timeout: 5000 });
-  await page.click('//*[@id="cookie_msg_btn_no"]');
+  const cookieBtn = await page.$('//*[@id="cookie_msg_btn_no"]');
+  if (cookieBtn) await cookieBtn.click();
 
   await page.waitForSelector('#concerns_accordion-8944', { timeout: 5000 });
   await page.click('#concerns_accordion-8944');
@@ -23,11 +23,9 @@ async function checkTermin(page) {
   await page.waitForSelector('#WeiterButton', { timeout: 5000 });
   await page.click('#WeiterButton');
 
-  const checkboxIds = await page.evaluate(() => {
-    return Array.from(document.querySelectorAll('#TevisDialog .doclist_item input[type="checkbox"]')).map(el => el.id);
-  });
-  for (const id of checkboxIds) {
-    await page.click(`label[for="${id}"]`);
+  const labels = await page.$$('//*[@id="TevisDialog"]//div[contains(@class,"doclist_item") or contains(@class,"documentlist_item")]//label | //*[@id="TevisDialog"]/div/div/div[2]/div/div//label');
+  for (const label of labels) {
+    await label.click();
   }
 
   await page.click('//*[@id="OKButton"]');
