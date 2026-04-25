@@ -1,11 +1,19 @@
-# Mulheim Stadt Termin TS
+# Monitor Mülheim Stadt Termin
 
-This project is designed to automate and test various functionalities related to the Mulheim Stadt Termin system using Playwright. It includes test cases for different scenarios and generates reports for test results.
+A Playwright-based slot availability monitor that continuously checks for open appointments on the [Mülheim Stadt booking system](https://terminvergabe.muelheim-ruhr.de) and sends notifications when slots appear.
+
+> **Note:** This is a monitor, not a test suite. Scripts run in infinite loops and alert when an appointment becomes available.
+
+## Current Availability
+
+| Appointment Type | Next Available |
+|---|---|
+| Anmeldung Einzelperson (Ausländeramt) | ab 30.06.2026, 08:30 Uhr |
 
 ## Prerequisites
 
 - Node.js (v16 or later)
-- npm or yarn
+- npm
 
 ## Installation
 
@@ -15,17 +23,33 @@ This project is designed to automate and test various functionalities related to
    ```
 2. Navigate to the project directory:
    ```bash
-   cd mulheim-stadt-termin-ts
+   cd Monitor-Mulheim-Stadt-Termin
    ```
 3. Install dependencies:
    ```bash
    npm install
+   npx playwright install --with-deps
    ```
 
+## Usage
 
-## Finding the Slots
+There are no npm scripts — use `npx playwright` directly.
 
-To execute specific use cases independently, use the following commands:
+```bash
+# Run all monitors
+npx playwright test
+
+# Run a specific monitor
+npx playwright test tests/extend-rp.spec.ts
+
+# Run with visible browser
+npx playwright test tests/extend-rp.spec.ts --headed
+
+# View HTML report after run
+npx playwright show-report
+```
+
+## Monitors
 
 - **Extend RP Slots**:
   ```bash
@@ -36,51 +60,51 @@ To execute specific use cases independently, use the following commands:
   ```bash
   npx playwright test tests/ummeldung-abmeldung.spec.ts
   ```
+  Optionally filter by a cutoff date — only alerts if the next slot is **before** the given date:
+  ```bash
+  BEFORE_DATE=2026-06-01 npx playwright test tests/ummeldung-abmeldung.spec.ts
+  ```
+  `BEFORE_DATE` accepts `YYYY-MM-DD` format.
 
 - **Request PR Skilled Worker Slots**:
   ```bash
   npx playwright test tests/request-pr-skilled-worker.spec.ts
   ```
 
-## Media Files
+- **Invite Friends/Family Slots**:
+  ```bash
+  npx playwright test tests/invite-friends-family.spec.ts
+  ```
 
-The `media/` directory contains audio files used during test execution, such as notification sounds.
+## Notifications
+
+When a slot is found, monitors trigger:
+- **Audio**: plays `media/beep.wav` or `media/beep-extended.mp3`
+- **Terminal**: bell character printed to console
+- **iMessage**: macOS `shortcuts run "Send iMessage for Slot"` (requires Shortcuts setup)
 
 ## Project Structure
 
 ```
-example.spec.ts
-package.json
 playwright.config.ts
+package.json
 media/
-    beep-extended.mp3
     beep.wav
-playwright-report/
-    index.html
-test-results/
+    beep-extended.mp3
 tests/
     extend-rp.spec.ts
     invite-friends-family.spec.ts
     request-pr-skilled-worker.spec.ts
     ummeldung-abmeldung.spec.ts
-tests-examples/
-    demo-todo-app
+playwright-report/
+test-results/
 ```
 
-### Key Files and Directories
+## Notes
 
-- **example.spec.ts**: Example test specification.
-- **package.json**: Contains project dependencies and scripts.
-- **playwright.config.ts**: Configuration file for Playwright.
-- **media/**: Contains media files used in tests.
-- **playwright-report/**: Stores the generated test reports.
-- **test-results/**: Contains test result artifacts.
-- **tests/**: Directory containing test specifications for various scenarios.
-- **tests-examples/**: Example tests for demonstration purposes.
-
-## Contributing
-
-Feel free to submit issues or pull requests to improve this project.
+- The target site is third-party and not under our control — selectors (especially XPaths) can break without warning when the site updates. If a monitor stops working, check whether the page structure has changed.
+- Scripts retry every 60 seconds on failure.
+- Session info and IPC with macOS Shortcuts is handled via temp files in the OS temp directory.
 
 ## License
 
