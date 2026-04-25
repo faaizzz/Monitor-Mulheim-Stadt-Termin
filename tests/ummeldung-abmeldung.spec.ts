@@ -8,7 +8,7 @@ import { sendTelegramMessage } from '../src/telegram';
 
 const play = player();
 
-// Optional: pass --before-date=YYYY-MM-DD via `node run.js` or set BEFORE_DATE env var
+// Optional: set BEFORE_DATE=YYYY-MM-DD env var to only alert when slot is before that date
 const beforeDateArg = process.env.BEFORE_DATE ?? null;
 const beforeDate = beforeDateArg ? new Date(beforeDateArg) : null;
 
@@ -47,38 +47,38 @@ async function checkTermin(page) {
   expect(nextTerminExists).toBeTruthy();
   if (!nextTerminExists) {
     console.log('Next Termin does not exist');
-  } else {
-    console.log('Next Termin for Ummeldung / Abmeldung exists');
-    const content = await page.textContent('//*[@id="suggest_location_content"]/form/dl/dd[4]');
-    console.log('Date Time:', content);
-
-    const terminDate = parseTerminDate(content ?? '');
-    if (beforeDate && terminDate && terminDate >= beforeDate) {
-      console.log(`Termin (${content?.trim()}) is not before ${process.env.BEFORE_DATE} — skipping notification`);
-    } else {
-      console.log('');
-
-      play.play('media/beep.wav', (err: any) => {
-        if (err) console.error('Error playing audio:', err);
-      });
-
-      await sendTelegramMessage(`Next Termin for Ummeldung / Abmeldung exists. Date Time: ${content}`);
-
-      try {
-        const inputMessage = 'Next Termin for Ummeldung / Abmeldung exists. Date Time: ' + content;
-        const tempFilePath = join(tmpdir(), 'shortcut-input.txt');
-        writeFileSync(tempFilePath, inputMessage, 'utf8');
-        const command = `shortcuts run "Send iMessage for Slot" --input-path "${tempFilePath}"`;
-        // const output = execSync(command, { encoding: 'utf8' });
-        // console.log(`Shortcut Output: ${output}`);
-      } catch (error) {
-        console.error(`Error running shortcut: ${error}`);
-      }
-    }
+    return;
   }
 
-  await page.waitForTimeout(3000);
+  console.log('Next Termin for Ummeldung / Abmeldung exists');
+  const content = await page.textContent('//*[@id="suggest_location_content"]/form/dl/dd[4]');
+  console.log('Date Time:', content);
+
+  const terminDate = parseTerminDate(content ?? '');
+  if (beforeDate && terminDate && terminDate >= beforeDate) {
+    throw new Error(`Termin (${content?.trim()}) is not before ${process.env.BEFORE_DATE} — will retry`);
+  }
+
+  console.log('');
+  play.play('media/beep.wav', (err: any) => {
+    if (err) console.error('Error playing audio:', err);
+  });
+
+  await sendTelegramMessage(`Next Termin for Ummeldung / Abmeldung exists. Date Time: ${content}`);
+
+  try {
+    const inputMessage = 'Next Termin for Ummeldung / Abmeldung exists. Date Time: ' + content;
+    const tempFilePath = join(tmpdir(), 'shortcut-input.txt');
+    writeFileSync(tempFilePath, inputMessage, 'utf8');
+    const command = `shortcuts run "Send iMessage for Slot" --input-path "${tempFilePath}"`;
+    // const output = execSync(command, { encoding: 'utf8' });
+    // console.log(`Shortcut Output: ${output}`);
+  } catch (error) {
+    console.error(`Error running shortcut: ${error}`);
+  }
 }
+
+const sleep = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms));
 
 test('Ummeldung / Abmeldung Termin', async ({ page }) => {
   test.setTimeout(0); // Disable timeout for this test
@@ -88,8 +88,9 @@ test('Ummeldung / Abmeldung Termin', async ({ page }) => {
       await checkTermin(page);
       success = true;
     } catch (error) {
-      console.log('Retrying due to error:', error);
-      await page.waitForTimeout(60000); // wait for 1 minute before retrying
+      const currentTime = new Date().toLocaleString();
+      console.error(`[${currentTime}] Retrying in 60s:`, error.message);
+      await sleep(60000);
     }
   }
 });
