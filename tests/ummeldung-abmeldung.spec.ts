@@ -23,9 +23,10 @@ async function checkTermin(page) {
   await page.waitForSelector('#WeiterButton', { timeout: 5000 });
   await page.click('#WeiterButton');
 
-  const labels = await page.$$('//*[@id="TevisDialog"]//div[contains(@class,"doclist_item") or contains(@class,"documentlist_item")]//label | //*[@id="TevisDialog"]/div/div/div[2]/div/div//label');
-  for (const label of labels) {
-    await label.click();
+  const items = await page.$$('//*[@id="TevisDialog"]//div[contains(@class,"doclist_item") or contains(@class,"documentlist_item")]');
+  for (const item of items) {
+    const label = await item.$('label');
+    if (label) await label.click();
   }
 
   await page.click('//*[@id="OKButton"]');
