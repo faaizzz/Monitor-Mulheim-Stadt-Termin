@@ -47,6 +47,75 @@ If the portal adds, removes, or renames an Anliegen, update `src/anliegen-config
 node scripts/generate-anliegen-tests.js
 ```
 
+## Monitors
+
+All 49 Anliegen, grouped by the 8 category tabs on the portal. Each maps to `tests/anliegen/<slug>.spec.ts`.
+
+### Meldewesen
+- Anmeldung Einzelperson — `meldewesen-anmeldung-einzelperson`
+- Anmeldung EU-Bürger — `meldewesen-anmeldung-eu-buerger`
+- Anmeldung Familie — `meldewesen-anmeldung-familie`
+- Ummeldung / Abmeldung — `meldewesen-ummeldung-abmeldung`
+
+### Allgemeine Ausländerangelegenheiten
+- Erteilung Aufenthaltserlaubnis oder BlueCard/EU — `allgemeine-aufenthalt-erteilung-aufenthaltserlaubnis-oder-bluecard-eu`
+- Verlängerung Aufenthaltserlaubnis oder BlueCard/EU — `allgemeine-aufenthalt-verlaengerung-aufenthaltserlaubnis-oder-bluecard-eu`
+- Auflagenänderung bzgl. Wohnsitznahme — `allgemeine-aufenthalt-auflagenaenderung-bzgl-wohnsitznahme`
+- Auflagenänderung bzgl. Arbeit — `allgemeine-aufenthalt-auflagenaenderung-bzgl-arbeit`
+- Verlängerung Fiktion — `allgemeine-aufenthalt-verlaengerung-fiktion`
+- Ausstellung eines Reiseausweises nach der Genfer Konvention — `allgemeine-aufenthalt-ausstellung-reiseausweis-genfer-konvention`
+- Erteilung Niederlassungserlaubnis — `allgemeine-aufenthalt-erteilung-niederlassungserlaubnis`
+- Erteilung Niederlassungserlaubnis für Fachkräfte — `allgemeine-aufenthalt-erteilung-niederlassungserlaubnis-fachkraefte`
+- Übertragung Aufenthaltserlaubnis / Niederlassungserlaubnis — `allgemeine-aufenthalt-uebertragung-aufenthaltserlaubnis-niederlassungserlaubnis`
+- Ausstellung einer Aufenthaltskarte EU/Daueraufenthaltskarte — `allgemeine-aufenthalt-ausstellung-aufenthaltskarte-eu-daueraufenthaltskarte`
+- Allgemeine Beratung — `allgemeine-aufenthalt-allgemeine-beratung`
+- Elektronische Aufenthaltstitel (eAT) > Aktivierung Online Funktion / PIN-Änderung — `allgemeine-aufenthalt-elektronische-aufenthaltstitel-eat-aktivierung-online-pin`
+- Abgabe einer Verpflichtungserklärung — `allgemeine-aufenthalt-abgabe-verpflichtungserklaerung`
+
+### Bürger der Europäischen Union
+- Beratung — `eu-buerger-beratung`
+- Einreichen Dokumente EU-Bürger — `eu-buerger-einreichen-dokumente-eu-buerger`
+
+### Visaangelegenheiten
+- Anmeldung Einzelperson mit Visum — `visa-anmeldung-einzelperson-mit-visum`
+- Anmeldung Familie mit Visum — `visa-anmeldung-familie-mit-visum`
+- Beratung Familienzusammenführung — `visa-beratung-familienzusammenfuehrung`
+
+### Mitarbeiter der Max-Planck-Institute
+- Anmeldung — `max-planck-anmeldung`
+- Ummeldung / Abmeldung — `max-planck-ummeldung-abmeldung`
+- Erteilung Aufenthaltserlaubnis — `max-planck-erteilung-aufenthaltserlaubnis`
+- Verlängerung Aufenthaltserlaubnis (Fiktion) — `max-planck-verlaengerung-aufenthaltserlaubnis-fiktion`
+- Erteilung einer Niederlassungserlaubnis oder Blaue Karte EU — `max-planck-erteilung-niederlassungserlaubnis-oder-blaue-karte-eu`
+- Allgemeine Beratung — `max-planck-allgemeine-beratung`
+
+### Studierende und Anerkennung der Berufsqualifikation
+- Anmeldung — `studierende-anmeldung`
+- Ummeldung / Abmeldung — `studierende-ummeldung-abmeldung`
+- Erteilung Aufenthaltserlaubnis — `studierende-erteilung-aufenthaltserlaubnis`
+- Verlängerung Aufenthaltserlaubnis — `studierende-verlaengerung-aufenthaltserlaubnis`
+- Auflagenänderung (Wechsel Studium, Arbeit o.ä.) — `studierende-auflagenaenderung-wechsel-studium-arbeit`
+- Neuausstellung oder Übertragung Aufenthaltserlaubnis — `studierende-neuausstellung-oder-uebertragung-aufenthaltserlaubnis`
+- Erteilung einer Niederlassungserlaubnis oder Blaue Karte EU — `studierende-erteilung-niederlassungserlaubnis-oder-blaue-karte-eu`
+- Allgemeine Beratung — `studierende-allgemeine-beratung`
+- Elektronische Aufenthaltstitel (eAT) > Aktivierung Online Funktion / PIN-Änderung — `studierende-elektronische-aufenthaltstitel-eat-aktivierung-online-pin`
+- Abgabe einer Verpflichtungserklärung zur Sicherung des Lebensunterhaltesbei Studierenden — `studierende-abgabe-verpflichtungserklaerung-lebensunterhalt`
+
+### Einbürgerung
+- Beratung zur Einbürgerung — `einbuergerung-beratung-zur-einbuergerung`
+- Abgabe des Einbürgerungsantrages — `einbuergerung-abgabe-einbuergerungsantrag`
+
+### Asylangelegenheiten und Rückkehrmanagement
+- Beratung allgemein — `asyl-beratung-allgemein`
+- Beratung freiwillige Ausreise — `asyl-beratung-freiwillige-ausreise`
+- Ersterteilung einer Aufenthaltsgestattung — `asyl-ersterteilung-aufenthaltsgestattung`
+- Verlängerung einer Aufenthaltsgestattung — `asyl-verlaengerung-aufenthaltsgestattung`
+- Erteilung einer Duldung — `asyl-erteilung-duldung`
+- Verlängerung einer Duldung — `asyl-verlaengerung-duldung`
+- Änderung der Arbeitsauflage (Duldung oder Aufenthaltsgestattung) — `asyl-aenderung-arbeitsauflage`
+- Antrag auf Streichung der Wohnsitzauflage (Duldung oder Aufenthaltsgestattung) — `asyl-antrag-streichung-wohnsitzauflage`
+- Beantragung der Ersterteilung einer Aufenthaltserlaubnis — `asyl-beantragung-ersterteilung-aufenthaltserlaubnis`
+
 ## Usage
 
 There are no npm scripts — use `npx playwright` directly.
