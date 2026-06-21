@@ -6,8 +6,12 @@ export class AnliegenPage {
   async open(): Promise<void> {
     await this.page.goto('https://terminvergabe.muelheim-ruhr.de/select2?md=9');
     await expect(this.page).toHaveTitle(/Terminvergabe/);
-    const cookieBtn = await this.page.$('//*[@id="cookie_msg_btn_no"]');
-    if (cookieBtn) await cookieBtn.click();
+    // Locator (not ElementHandle): re-queries the DOM on every retry, so it
+    // can't go stale if the consent banner re-renders after this goto().
+    await this.page
+      .locator('#cookie_msg_btn_no')
+      .click({ timeout: 3000 })
+      .catch(() => {});
   }
 
   async selectAnliegen(tab: string, name: string): Promise<void> {

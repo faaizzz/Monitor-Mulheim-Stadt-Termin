@@ -147,7 +147,17 @@ BEFORE_DATE=2026-06-01 npx playwright test tests/anliegen/meldewesen/meldewesen-
 When a slot is found, a monitor triggers:
 - **Audio**: plays `media/beep.wav`
 - **Terminal**: bell character printed to console
-- **Telegram**: message via `src/telegram.ts` (requires `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` env vars; silently skipped if unset)
+- **Telegram**: message via `src/telegram.ts` (silently skipped if not configured)
+
+### Setting up Telegram alerts
+
+1. In Telegram, message [@BotFather](https://t.me/BotFather), send `/newbot`, and follow the prompts. It replies with a token — that's `TELEGRAM_BOT_TOKEN`.
+2. Send any message to your new bot, then visit `https://api.telegram.org/bot<YOUR_TOKEN>/getUpdates` and find `"chat":{"id":...}` — that's `TELEGRAM_CHAT_ID`. (For a group, add the bot to the group first; group chat IDs are negative.)
+3. Copy `.env.example` to `.env` and fill in both values:
+   ```bash
+   cp .env.example .env
+   ```
+   `playwright.config.ts` loads `.env` automatically (via `dotenv`), so every monitor — including all 49 spawned by `scripts/run-all-monitors.js` — picks it up without re-exporting anything.
 
 ## Notes
 

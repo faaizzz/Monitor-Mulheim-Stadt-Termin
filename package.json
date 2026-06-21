@@ -12,6 +12,7 @@
     "@types/node": "^22.13.10"
   },
   "dependencies": {
+    "dotenv": "^17.4.2",
     "play-sound": "^1.1.6"
   }
 }
