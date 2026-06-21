@@ -29,7 +29,14 @@ async function checkOnce(page: import('@playwright/test').Page, config: Anliegen
     throw new Error(`Termin (${content.trim()}) is not before ${process.env.BEFORE_DATE} — will retry`);
   }
 
-  await notifySlotFound(config.name, content);
+  // A found (and date-filter-passing) slot is terminal: don't redo the whole
+  // booking flow again just because a notification channel failed (e.g. a
+  // network-blocked Telegram). Log it and move on instead of retrying.
+  try {
+    await notifySlotFound(config.name, content);
+  } catch (err: any) {
+    console.error(`Slot found but a notification failed (not retrying): ${err.message}`);
+  }
 }
 
 export function defineAnliegenMonitor(config: AnliegenConfig): void {
