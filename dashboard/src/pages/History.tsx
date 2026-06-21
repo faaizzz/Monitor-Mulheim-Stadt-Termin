@@ -118,7 +118,7 @@ export default function History() {
             <XAxis dataKey="tab" tick={{ fontSize: 10 }} interval={0} angle={-20} textAnchor="end" height={70} />
             <YAxis allowDecimals={false} />
             <Tooltip />
-            <Bar dataKey="count" fill="#1d7a4c" />
+            <Bar dataKey="count" fill="#1d7a4c" isAnimationActive={false} />
           </BarChart>
         </ResponsiveContainer>
       </section>
@@ -131,7 +131,7 @@ export default function History() {
             <XAxis type="number" allowDecimals={false} />
             <YAxis dataKey="name" type="category" width={220} tick={{ fontSize: 10 }} />
             <Tooltip />
-            <Bar dataKey="avgMinutes" fill="#2563eb" />
+            <Bar dataKey="avgMinutes" fill="#2563eb" isAnimationActive={false} />
           </BarChart>
         </ResponsiveContainer>
       </section>
@@ -144,7 +144,7 @@ export default function History() {
             <XAxis type="number" allowDecimals={false} />
             <YAxis dataKey="name" type="category" width={220} tick={{ fontSize: 10 }} />
             <Tooltip />
-            <Bar dataKey="errors" fill="#9a6400" />
+            <Bar dataKey="errors" fill="#9a6400" isAnimationActive={false} />
           </BarChart>
         </ResponsiveContainer>
       </section>
