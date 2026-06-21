@@ -35,6 +35,16 @@ npx playwright test tests/availability-report.spec.ts
 
 # View HTML report after run
 npx playwright show-report
+
+# Continuous sync to Supabase: sweeps all 49 once per pass, writes current_status +
+# availability_events, repeats forever (requires SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY in .env)
+npx playwright test tests/availability-sync.spec.ts
+
+# Dashboard (separate app, reads Supabase directly — see dashboard/README via dashboard/.env.example)
+cd dashboard && npm install && npm run dev
+
+# All three services (monitor + sync + dashboard) via Docker
+docker compose up --build
 ```
 
 There are no npm scripts — use `npx playwright` directly, or the scripts above for multi-monitor orchestration.
@@ -52,7 +62,25 @@ Ausländeramt (`md=9`) offers 49 appointment types ("Anliegen") across 8 categor
 - `src/notifier.ts` — beep + terminal bell + Telegram on slot found.
 - `tests/anliegen/<tab>/<slug>.spec.ts` — 49 generated files in 8 per-tab folders, each just importing a config entry by slug and calling `defineAnliegenMonitor`. Regenerate with `scripts/generate-anliegen-tests.js` if `anliegen-config.ts` changes.
 - `tests/availability-report.spec.ts` — one Playwright `test()` that calls `fetchNextTermin` for all 49 Anliegen exactly once (no retry loop), classifies each as `available`/`no-slot`/`error`, prints a console summary grouped by tab, and saves `reports/availability-report-<timestamp>.{md,json,html}` (gitignored) — the `.html` is a styled, color-coded view grouped by tab.
-- `scripts/run-all-monitors.js` — spawns each generated spec file as its own `npx playwright test <file>` child process.
+- `scripts/run-all-monitors.js` — spawns each generated spec file as its own `npx playwright test <file>` child process; forwards `SIGTERM`/`SIGINT` to every child so `docker stop` exits promptly instead of waiting out the stop-timeout.
+- `src/termin-utils.ts` — `parseTerminDate`/`classifyFailure`, pure helpers shared by `anliegen-monitor.ts`, `availability-report.spec.ts`, and the sync job below (deliberately Playwright-free so the sync job doesn't need to import test-runner code).
+
+### Supabase sync job (historical persistence)
+
+A fourth, independent process — **never touches the 49 notification monitors above**. Models itself on `availability-report.spec.ts` (single attempt per Anliegen, same `fetchNextTermin`/`classifyFailure`) but loops forever like a monitor instead of exiting after one pass, and writes to Supabase instead of notifying:
+
+- `supabase/migrations/0001_availability_schema.sql` — `current_status` (1 row per slug, upserted every sweep) and `availability_events` (append-only, one row per status *transition*, not per sweep) tables, plus `availability_windows`/`daily_availability_summary` views for the dashboard. RLS: public `select`, no `insert`/`update` for anon/authenticated — only the service-role key (used by the sync job) can write.
+- `src/supabase-client.ts` — service-role client, built from `SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY`.
+- `src/availability-sync.ts` — `loadLastKnownStatus(client)` seeds an in-memory `Map<slug, status>` from whatever's already in `current_status` (so a process restart doesn't re-emit 49 spurious "transitions"); `syncOnce(client, results, lastKnown)` upserts `current_status` for every result, then inserts into `availability_events` only for slugs whose status differs from `lastKnown` — in that order, since `availability_events.slug` has a FK into `current_status`.
+- `tests/availability-sync.spec.ts` — `test.setTimeout(0)`, infinite loop: sweep all 49 via `fetchNextTermin` (single attempt, no retry), `syncOnce(...)`, sleep `SYNC_GAP_MS` (default 60000 — a fixed *gap* after completion, not a period, so sweeps can't overlap), repeat.
+
+### Dashboard (`dashboard/`)
+
+Standalone Vite + React + TypeScript app, **not** part of this package's npm workspace — its own `package.json`, builds and deploys independently. Reads Supabase directly with the anon key (RLS-limited to `select`); never talks to this repo's monitors/sync job at runtime. Two routes: `/` (live `current_status` grid via Supabase Realtime) and `/history` (charts + filterable table over `availability_events` and the two views). `src/tabSlugs.ts` duplicates `TAB_SLUGS` from `src/anliegen-config.ts` since the dashboard has no access to this repo's `src/`.
+
+### Docker
+
+Root `Dockerfile` (Playwright base image) is shared by the `monitor` and `sync` services in `docker-compose.yml` (different `command:` each); `dashboard/Dockerfile` is a separate multi-stage Node-build/nginx-serve image. The dashboard's Supabase env vars are Vite build-time args (inlined at build), so changing `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` needs `docker compose build dashboard`, not just a restart.
 
 ### Flow per Anliegen
 

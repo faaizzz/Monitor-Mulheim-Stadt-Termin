@@ -150,6 +150,54 @@ npx playwright test tests/availability-report.spec.ts
 ```
 Takes several minutes (one sequential pass through all 49). Prints a summary grouped by tab to the console, and saves a timestamped `reports/availability-report-<timestamp>.{md,json,html}` (gitignored). Each item is classified `available` (with the Termin date), `no-slot` (the expected "Nächster Termin" timeout), or `error` (anything else — a real selector break worth investigating). Open the `.html` file in a browser for a readable, color-coded view grouped by tab; the `.json` is for programmatic use.
 
+### Supabase sync job (persisted history)
+
+Unlike the monitors (which stop after finding a slot) and the one-shot report (which exits), `tests/availability-sync.spec.ts` loops forever like a monitor but sweeps **all 49 Anliegen** once per pass and writes the result to Supabase instead of notifying:
+```bash
+npx playwright test tests/availability-sync.spec.ts
+```
+Each pass upserts one row per Anliegen into `current_status` (always-fresh snapshot) and appends a row to `availability_events` only when a status actually changed since the last pass (so restarting the job doesn't create spurious history). See `supabase/migrations/0001_availability_schema.sql` for the schema, and the [`dashboard/`](dashboard/) app for a UI on top of it. Requires `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` in `.env` — see "Supabase setup" below. Sweep gap defaults to 60s; override with `SYNC_GAP_MS`.
+
+## Supabase setup
+
+1. Create a project at [supabase.com](https://supabase.com).
+2. Open the SQL editor and run `supabase/migrations/0001_availability_schema.sql`.
+3. From Project Settings → API, copy the Project URL, `anon` key, and `service_role` key into `.env` (see `.env.example`):
+   ```
+   SUPABASE_URL=
+   SUPABASE_SERVICE_ROLE_KEY=
+   SUPABASE_ANON_KEY=
+   ```
+   The sync job uses the service-role key (server-side, full write access). The dashboard uses the anon key (read-only — RLS only grants `select` to `anon`/`authenticated`).
+
+## Dashboard
+
+`dashboard/` is a standalone Vite + React + TypeScript app reading directly from Supabase (not from this repo's monitors/sync job at runtime):
+- **Current Status** (`/`) — all 49 Anliegen grouped by tab, live via Supabase Realtime on `current_status`.
+- **Historical Analysis** (`/history`) — charts (availability frequency per tab, average availability-window duration, error counts per Anliegen) plus a filterable recent-events table, from `availability_events` and the `availability_windows`/`daily_availability_summary` views.
+
+```bash
+cd dashboard
+cp .env.example .env   # fill in VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY
+npm install
+npm run dev
+```
+
+## Docker
+
+Three independent services, defined in `docker-compose.yml`:
+- `monitor` — the existing 49 notification monitors (`scripts/run-all-monitors.js`), unchanged.
+- `sync` — the Supabase sync job (`tests/availability-sync.spec.ts`).
+- `dashboard` — the React app, built and served via nginx.
+
+`monitor` and `sync` share the root `Dockerfile`; `dashboard` has its own under `dashboard/Dockerfile`.
+
+```bash
+cp .env.example .env      # TELEGRAM_*, SUPABASE_*
+docker compose up --build
+```
+The dashboard build inlines `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` at build time (via `docker-compose.yml` build args from `.env`) — changing them requires `docker compose build dashboard`, not just a restart.
+
 ## Notifications
 
 When a slot is found, a monitor triggers:

@@ -8,5 +8,13 @@ node_modules/
 /logs/
 /reports/
 
+# Dashboard
+dashboard/node_modules/
+dashboard/dist/
+*.tsbuildinfo
+dashboard/vite.config.js
+dashboard/vite.config.d.ts
+
 # Secrets
 .env
+dashboard/.env

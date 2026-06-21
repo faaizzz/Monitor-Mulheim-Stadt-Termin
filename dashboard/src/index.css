@@ -1,0 +1,157 @@
+:root {
+  --ink: #1b2430;
+  --muted: #6b7785;
+  --line: #e3e7ec;
+  --bg: #f6f7f9;
+  --card: #ffffff;
+  --green: #1d7a4c;
+  --green-bg: #e4f5ec;
+  --amber: #9a6400;
+  --amber-bg: #fdf1dc;
+  --gray-bg: #eef0f3;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.app-header {
+  background: var(--card);
+  border-bottom: 1px solid var(--line);
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.app-header h1 {
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.app-header nav a {
+  margin-left: 1rem;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.app-header nav a.active {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+main {
+  padding: 1.5rem;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.tab-grid,
+.history {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.tab-card,
+.chart-card,
+.events-table-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 1.1rem 1.3rem;
+}
+
+.tab-card h2,
+.chart-card h2,
+.events-table-card h2 {
+  font-size: 1rem;
+  margin: 0 0 0.8rem;
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.6rem;
+}
+
+.anliegen-card {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.7rem 0.8rem;
+  font-size: 0.85rem;
+}
+
+.anliegen-name {
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+}
+
+.badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.18rem 0.55rem;
+  border-radius: 999px;
+}
+
+.badge-available {
+  background: var(--green-bg);
+  color: var(--green);
+}
+
+.badge-no-slot {
+  background: var(--gray-bg);
+  color: var(--muted);
+}
+
+.badge-error {
+  background: var(--amber-bg);
+  color: var(--amber);
+}
+
+.termin {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 0.8rem;
+  margin-top: 0.4rem;
+}
+
+.checked-at {
+  font-size: 0.72rem;
+  margin-top: 0.4rem;
+}
+
+.filters {
+  display: flex;
+  gap: 0.6rem;
+  margin-bottom: 0.8rem;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 0.5rem 0.6rem;
+  border-bottom: 1px solid var(--line);
+}
+
+th.sortable {
+  cursor: pointer;
+}

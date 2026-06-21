@@ -2,14 +2,7 @@ import { test } from '@playwright/test';
 import { AnliegenConfig } from './anliegen-config';
 import { fetchNextTermin } from './fetch-next-termin';
 import { notifySlotFound } from './notifier';
-
-// Optional: set BEFORE_DATE=YYYY-MM-DD env var to only alert when slot is before that date
-function parseTerminDate(text: string): Date | null {
-  const match = text.match(/(\d{2})\.(\d{2})\.(\d{4})/);
-  if (!match) return null;
-  const [, day, month, year] = match;
-  return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-}
+import { parseTerminDate } from './termin-utils';
 
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
