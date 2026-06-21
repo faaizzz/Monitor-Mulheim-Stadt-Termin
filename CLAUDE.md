@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a Playwright-based **slot availability monitor** — not a test suite — that continuously checks for open appointments (Termine) on the Mülheim Stadt booking system (`terminvergabe.muelheim-ruhr.de`) and sends notifications when slots appear.
 
-The target webapp is third-party and not under our control, so **selectors (especially XPaths) can break without warning** whenever the site updates. When a script stops working, the first thing to check is whether the page structure has changed and selectors need updating.
+The target webapp is third-party and not under our control, so **selectors can break without warning** whenever the site updates. We've already hit this once: the portal's internal `concerns_accordion-*` / `button-plus-*` element IDs regenerate periodically (observed changing between sessions), which is why the Page Object uses role-based selectors (tab/button accessible names) instead of those IDs. When a monitor stops working, the first thing to check is whether the page structure or accessible labels have changed.
 
 ## Commands
 
@@ -15,55 +15,59 @@ The target webapp is third-party and not under our control, so **selectors (espe
 npm install
 npx playwright install --with-deps
 
-# Run all tests
-npx playwright test
-
-# Run a single test file
-npx playwright test tests/invite-friends-family.spec.ts
+# Run a single monitor
+npx playwright test tests/anliegen/meldewesen-anmeldung-einzelperson.spec.ts
 
 # Run with visible browser
-npx playwright test tests/extend-rp.spec.ts --headed
+npx playwright test tests/anliegen/meldewesen-anmeldung-einzelperson.spec.ts --headed
+
+# List every monitor
+npx playwright test --list
+
+# Run every monitor at once, each as its own OS process
+node scripts/run-all-monitors.js
+
+# Regenerate tests/anliegen/*.spec.ts after editing src/anliegen-config.ts
+node scripts/generate-anliegen-tests.js
 
 # View HTML report after run
 npx playwright show-report
 ```
 
-There are no npm scripts — use `npx playwright` directly.
+There are no npm scripts — use `npx playwright` directly, or the scripts above for multi-monitor orchestration.
+
+**Do not run `npx playwright test` with no path argument.** Playwright's worker pool is bounded (CPU core count by default); since every monitor loops forever, only `workers`-many would ever run while the rest starve in the queue. Use `scripts/run-all-monitors.js` instead — it spawns one independent process per monitor.
 
 ## Architecture
 
-### Two Generations of Tests
+Ausländeramt (`md=9`) offers 49 appointment types ("Anliegen") across 8 category tabs. Rather than duplicating the navigate/select/confirm/notify flow 49 times, it's built as a Page Object Model:
 
-**Legacy tests** (`extend-rp.spec.ts`, `ummeldung-abmeldung.spec.ts`, `request-pr-skilled-worker.spec.ts`, `invite-friends-family.spec.ts`):
-- Use XPath and ID selectors
-- Contain infinite retry loops (60-second intervals on failure)
-- Play audio alerts via `play-sound` library (`media/beep.wav`)
-- Invoke macOS Shortcut (`shortcuts run "Send iMessage for Slot"`) to send notifications
-- Write temp files to OS temp dir for IPC with macOS Shortcuts
+- `src/pages/AnliegenPage.ts` — the booking-flow Page Object: `open()`, `selectAnliegen(tab, name)`, `confirmDocumentsIfPresent()`, `getNextTermin()`.
+- `src/anliegen-config.ts` — single source of truth: every `{ tab, name, slug }` Anliegen. `name` must match the live site's `Erhöhen der Anzahl des Anliegens <name>` accessible button label exactly.
+- `src/anliegen-monitor.ts` — `defineAnliegenMonitor(config)`: registers one Playwright `test()` per Anliegen with the infinite 60s-retry loop (reads `BEFORE_DATE` env var to optionally skip slots on/after a cutoff date).
+- `src/notifier.ts` — beep + terminal bell + Telegram on slot found.
+- `tests/anliegen/<slug>.spec.ts` — 49 generated files, each just importing a config entry by slug and calling `defineAnliegenMonitor`. Regenerate with `scripts/generate-anliegen-tests.js` if `anliegen-config.ts` changes.
+- `scripts/run-all-monitors.js` — spawns each generated spec file as its own `npx playwright test <file>` child process.
 
-**MCP tests** (`mcp-anmeldung.spec.ts`, `mcp-invite-friends-family.spec.ts`):
-- Use Playwright role-based selectors (`getByRole`, `getByLabel`)
-- Use `page.evaluate()` for complex DOM interactions
-- Cleaner structure, no retry loops
+### Flow per Anliegen
 
-### Common Test Flow
+1. `open()` — navigate to the appointment URL, decline cookies if prompted
+2. `selectAnliegen(tab, name)` — click the tab, click the "Erhöhen der Anzahl..." button for that Anliegen, click Weiter
+3. `confirmDocumentsIfPresent()` — if the `Hinweis` modal (`#TevisDialog`) appears, check every `.documentlist_item_cb` via `page.evaluate` (direct click fails — checkboxes report "outside viewport" despite being visible) and click `#OKButton`. Some Anliegen show no modal at all; this step is a no-op then.
+4. `getNextTermin()` — wait for `text=Nächster Termin`, read the date from `dl/dd[4]`
 
-Each test navigates through the same booking system steps:
-1. Navigate to the appointment URL
-2. Accept cookies
-3. Click through service tabs to find the target appointment type
-4. Check required document checkboxes in the modal
-5. Extract the next available appointment datetime from the DOM
-6. Display/notify when a slot is found; retry after 60s on failure
+### Expected behavior, not a bug
 
-### Notification Stack (Legacy Tests)
+Most Anliegen have no open slot most of the time. `getNextTermin()` timing out — logged as `waiting for locator('text=Nächster Termin') to be visible`, `Timeout 5000ms exceeded` — is the **expected, correct signal**, not a failure: it means "no slot yet," and the monitor's retry loop will check again in 60 seconds. Don't "fix" this unless the timeout happens at an *earlier* step (tab/button/Weiter/dialog) — that would indicate real selector drift.
 
-- **Audio**: `play-sound` plays `media/beep.wav` or `media/beep-extended.mp3`
-- **Terminal**: Bell character (`\u0007`) is printed to the console
-- **iMessage**: macOS `shortcuts run` command triggers an iMessage Shortcut
+### Notification Stack
+
+- **Audio**: `play-sound` plays `media/beep.wav`
+- **Terminal**: Bell character (``) printed to console
+- **Telegram**: `src/telegram.ts`, requires `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` env vars (silently skipped if unset)
 
 ### Key Files
 
 - `playwright.config.ts` — Chromium only, HTML reporter, 2 retries on CI
-- `TEST_CONTEXT.md` — Detailed selector reference, known issues, and page structure
-- `media/` — Audio notification files
+- `src/anliegen-config.ts` — add/remove/rename an Anliegen here, then regenerate
+- `media/` — audio notification files
