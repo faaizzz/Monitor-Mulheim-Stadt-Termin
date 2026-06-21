@@ -1,6 +1,5 @@
 import { test, expect } from '@playwright/test';
 import player from 'play-sound';
-import { execSync } from 'child_process';
 import { writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
@@ -25,20 +24,22 @@ async function checkTermin(page) {
   const cookieBtn = await page.$('//*[@id="cookie_msg_btn_no"]');
   if (cookieBtn) await cookieBtn.click();
 
-  await page.waitForSelector('#concerns_accordion-8944', { timeout: 5000 });
-  await page.click('#concerns_accordion-8944');
+  await page.getByRole('tab', { name: 'Meldewesen' }).click({ timeout: 5000 });
 
-  await page.waitForSelector('#button-plus-2698', { timeout: 5000 });
-  await page.click('#button-plus-2698');
+  await page.getByRole('button', { name: 'Erhöhen der Anzahl des Anliegens Anmeldung Einzelperson' }).click({ timeout: 5000 });
 
   await page.waitForSelector('#WeiterButton', { timeout: 5000 });
   await page.click('#WeiterButton');
 
-  const items = await page.$$('//*[@id="TevisDialog"]//div[contains(@class,"doclist_item") or contains(@class,"documentlist_item")]');
-  for (const item of items) {
-    const label = await item.$('label');
-    if (label) await label.click();
-  }
+  await page.waitForSelector('#TevisDialog', { timeout: 5000 });
+  await page.evaluate(() => {
+    document.querySelectorAll('.documentlist_item_cb').forEach((cb: any) => {
+      if (!cb.checked) {
+        cb.checked = true;
+        cb.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    });
+  });
 
   await page.click('//*[@id="OKButton"]');
 
@@ -46,11 +47,11 @@ async function checkTermin(page) {
   const nextTerminExists = await page.isVisible('text=Nächster Termin');
   expect(nextTerminExists).toBeTruthy();
   if (!nextTerminExists) {
-    console.log('Next Termin does not exist');
+    console.log('Next Termin for Anmeldung Einzelperson does not exist');
     return;
   }
 
-  console.log('Next Termin for Ummeldung / Abmeldung exists');
+  console.log('Next Termin for Anmeldung Einzelperson exists');
   const content = await page.textContent('//*[@id="suggest_location_content"]/form/dl/dd[4]');
   console.log('Date Time:', content);
 
@@ -59,15 +60,15 @@ async function checkTermin(page) {
     throw new Error(`Termin (${content?.trim()}) is not before ${process.env.BEFORE_DATE} — will retry`);
   }
 
-  console.log('');
+  console.log("");
   play.play('media/beep.wav', (err: any) => {
     if (err) console.error('Error playing audio:', err);
   });
 
-  await sendTelegramMessage(`Next Termin for Ummeldung / Abmeldung exists. Date Time: ${content}`);
+  await sendTelegramMessage(`Next Termin for Anmeldung Einzelperson exists. Date Time: ${content}`);
 
   try {
-    const inputMessage = 'Next Termin for Ummeldung / Abmeldung exists. Date Time: ' + content;
+    const inputMessage = 'Next Termin for Anmeldung Einzelperson exists. Date Time: ' + content;
     const tempFilePath = join(tmpdir(), 'shortcut-input.txt');
     writeFileSync(tempFilePath, inputMessage, 'utf8');
     const command = `shortcuts run "Send iMessage for Slot" --input-path "${tempFilePath}"`;
@@ -80,7 +81,7 @@ async function checkTermin(page) {
 
 const sleep = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms));
 
-test('Ummeldung / Abmeldung Termin', async ({ page }) => {
+test('Anmeldung Einzelperson Termin', async ({ page }) => {
   test.setTimeout(0); // Disable timeout for this test
   let success = false;
   while (!success) {
