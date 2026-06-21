@@ -11,21 +11,25 @@ const play = player();
 async function checkTermin(page) {
   await page.goto('https://terminvergabe.muelheim-ruhr.de/select2?md=9');
   await expect(page).toHaveTitle(/Terminvergabe/);
-  // await page.waitForSelector('#cookie_msg_btn_no', { timeout: 5000 });
-  // await page.click('#cookie_msg_btn_no');
+  const cookieBtn = await page.$('//*[@id="cookie_msg_btn_no"]');
+  if (cookieBtn) await cookieBtn.click();
 
-  await page.waitForSelector('#concerns_accordion-8947', { timeout: 5000 });
-  await page.click('#concerns_accordion-8947');
+  await page.getByRole('tab', { name: 'Allgemeine Ausländerangelegenheiten' }).click({ timeout: 5000 });
 
-  await page.waitForSelector('#button-plus-2742', { timeout: 5000 });
-  await page.click('#button-plus-2742');
+  await page.getByRole('button', { name: 'Erhöhen der Anzahl des Anliegens Verlängerung Aufenthaltserlaubnis oder BlueCard/EU' }).click({ timeout: 5000 });
 
   await page.waitForSelector('#WeiterButton', { timeout: 5000 });
   await page.click('#WeiterButton');
 
-  for (let i = 1; i <= 13; i++) {
-    await page.click(`//*[@id="TevisDialog"]/div/div/div[2]/div/div[${i}]/div/label`);
-  }
+  await page.waitForSelector('#TevisDialog', { timeout: 5000 });
+  await page.evaluate(() => {
+    document.querySelectorAll('.documentlist_item_cb').forEach((cb: any) => {
+      if (!cb.checked) {
+        cb.checked = true;
+        cb.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    });
+  });
 
   await page.click('//*[@id="OKButton"]');
 
