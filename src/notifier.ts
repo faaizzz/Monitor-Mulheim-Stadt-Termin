@@ -12,10 +12,10 @@ export async function notifySlotFound(label: string, content: string): Promise<v
   // notification channels below.
   try {
     play.play('media/beep.wav', (err: any) => {
-      if (err) console.error('Error playing audio:', err);
+      if (err) console.error('Error playing audio:', err.message ?? err);
     });
-  } catch (err) {
-    console.error('Error playing audio:', err);
+  } catch (err: any) {
+    console.error('Error playing audio:', err.message ?? err);
   }
 
   await sendTelegramMessage(`Next Termin for ${label} exists. Date Time: ${content}`);
