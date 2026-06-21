@@ -142,6 +142,14 @@ BEFORE_DATE=2026-06-01 npx playwright test tests/anliegen/meldewesen/meldewesen-
 ```
 `BEFORE_DATE` accepts `YYYY-MM-DD` format. `run.js` wraps this as a `--before-date=YYYY-MM-DD` flag for any single spec file.
 
+### One-shot availability report (all 49, no retrying)
+
+Unlike the monitors above (which loop forever), this checks every Anliegen exactly once and exits:
+```bash
+npx playwright test tests/availability-report.spec.ts
+```
+Takes several minutes (one sequential pass through all 49). Prints a summary grouped by tab to the console, and saves a timestamped `reports/availability-report-<timestamp>.{md,json,html}` (gitignored). Each item is classified `available` (with the Termin date), `no-slot` (the expected "Nächster Termin" timeout), or `error` (anything else — a real selector break worth investigating). Open the `.html` file in a browser for a readable, color-coded view grouped by tab; the `.json` is for programmatic use.
+
 ## Notifications
 
 When a slot is found, a monitor triggers:
