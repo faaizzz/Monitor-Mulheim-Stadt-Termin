@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mhtermin-sync
+  namespace: mhtermin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mhtermin-sync
+  template:
+    metadata:
+      labels:
+        app: mhtermin-sync
+    spec:
+      imagePullSecrets:
+        - name: ghcr-credentials
+      containers:
+        - name: sync
+          image: ghcr.io/faaizzz/mhtermin-worker:latest
+          imagePullPolicy: Always
+          command: ['npx', 'playwright', 'test', 'tests/availability-sync.spec.ts']
+          envFrom:
+            - secretRef:
+                name: mhtermin-secrets
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 768Mi

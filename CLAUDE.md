@@ -15,20 +15,11 @@ The target webapp is third-party and not under our control, so **selectors can b
 npm install
 npx playwright install --with-deps
 
-# Run a single monitor
-npx playwright test tests/anliegen/meldewesen/meldewesen-anmeldung-einzelperson.spec.ts
+# Run the notification monitor: infinite loop, one sequential sweep of all 49 Anliegen per pass
+npx playwright test tests/notify-monitor.spec.ts
 
 # Run with visible browser
-npx playwright test tests/anliegen/meldewesen/meldewesen-anmeldung-einzelperson.spec.ts --headed
-
-# List every monitor
-npx playwright test --list
-
-# Run every monitor at once, each as its own OS process
-node scripts/run-all-monitors.js
-
-# Regenerate tests/anliegen/<tab>/*.spec.ts after editing src/anliegen-config.ts
-node scripts/generate-anliegen-tests.js
+npx playwright test tests/notify-monitor.spec.ts --headed
 
 # One-shot: check all 49 Anliegen exactly once (no retrying) and generate a report
 npx playwright test tests/availability-report.spec.ts
@@ -47,27 +38,26 @@ cd dashboard && npm install && npm run dev
 docker compose up --build
 ```
 
-There are no npm scripts — use `npx playwright` directly, or the scripts above for multi-monitor orchestration.
+There are no npm scripts — use `npx playwright` directly.
 
-**Do not run `npx playwright test` with no path argument.** Playwright's worker pool is bounded (CPU core count by default); since every monitor loops forever, only `workers`-many would ever run while the rest starve in the queue. Use `scripts/run-all-monitors.js` instead — it spawns one independent process per monitor.
+**Do not run `npx playwright test` with no path argument.** Both `notify-monitor.spec.ts` and `availability-sync.spec.ts` loop forever (`test.setTimeout(0)`); running the whole `tests/` dir would hang until the job-level CI timeout kills it. Always target a specific spec file.
 
 ## Architecture
 
-Ausländeramt (`md=9`) offers 49 appointment types ("Anliegen") across 8 category tabs. Rather than duplicating the navigate/select/confirm/notify flow 49 times, it's built as a Page Object Model:
+Ausländeramt (`md=9`) offers 49 appointment types ("Anliegen") across 8 category tabs. Rather than duplicating the navigate/select/confirm/notify flow 49 times, it's built as a Page Object Model with one shared single-attempt call reused by every script:
 
 - `src/pages/AnliegenPage.ts` — the booking-flow Page Object: `open()`, `selectAnliegen(tab, name)`, `confirmDocumentsIfPresent()`, `getNextTermin()`.
-- `src/anliegen-config.ts` — single source of truth: every `{ tab, name, slug }` Anliegen, plus `TAB_SLUGS` (tab name → folder name). `name` must match the live site's `Erhöhen der Anzahl des Anliegens <name>` accessible button label exactly.
-- `src/fetch-next-termin.ts` — `fetchNextTermin(page, config)`: the single-attempt booking-flow call (`open` → `selectAnliegen` → `confirmDocumentsIfPresent` → `getNextTermin`), shared by both the infinite monitors and the one-shot report below. Throws if no slot / a selector breaks.
-- `src/anliegen-monitor.ts` — `defineAnliegenMonitor(config)`: registers one Playwright `test()` per Anliegen with an infinite retry loop, sleeping `MONITOR_INTERVAL_MS` (default 600000 = 10 minutes) between attempts (reads `BEFORE_DATE` env var to optionally skip slots on/after a cutoff date). A found (and date-filter-passing) slot is terminal — notification failures are caught/logged but don't trigger re-running the flow.
+- `src/anliegen-config.ts` — single source of truth: every `{ tab, name, slug }` Anliegen. `name` must match the live site's `Erhöhen der Anzahl des Anliegens <name>` accessible button label exactly.
+- `src/fetch-next-termin.ts` — `fetchNextTermin(page, config)`: the single-attempt booking-flow call (`open` → `selectAnliegen` → `confirmDocumentsIfPresent` → `getNextTermin`), shared by every script below. Throws if no slot / a selector breaks.
+- `src/termin-utils.ts` — `parseTerminDate`/`classifyFailure`, pure helpers shared by every script below (deliberately Playwright-free so the sync job doesn't need to import test-runner code).
 - `src/notifier.ts` — beep + terminal bell + Telegram on slot found.
-- `tests/anliegen/<tab>/<slug>.spec.ts` — 49 generated files in 8 per-tab folders, each just importing a config entry by slug and calling `defineAnliegenMonitor`. Regenerate with `scripts/generate-anliegen-tests.js` if `anliegen-config.ts` changes.
+- `src/notify-monitor.ts` — `checkAndNotify(results, lastKnown, beforeDate)`: given one sweep's results and an in-memory `Map<slug, status>`, calls `notifySlotFound` for every slug whose status newly transitioned to `available` (an already-available slot on the very first sweep after a process start still counts as new) and passes the `BEFORE_DATE` filter; mutates and returns `lastKnown`.
+- `tests/notify-monitor.spec.ts` — `test.setTimeout(0)`, infinite loop: sweep all 49 sequentially via `fetchNextTermin` (single attempt each, no per-Anliegen retry), `checkAndNotify(...)`, sleep `MONITOR_INTERVAL_MS` (default 600000 = 10 minutes — a fixed *gap* after completion, not a period, so sweeps can't overlap), repeat. One Chromium browser total, not 49 — this replaced an earlier design that spawned 49 parallel browser processes (deleted: `src/anliegen-monitor.ts`, `scripts/run-all-monitors.js`, `scripts/generate-anliegen-tests.js`, `tests/anliegen/**`), which used ~5GB RAM/8+ CPU cores and is unsafe on a small shared VPS.
 - `tests/availability-report.spec.ts` — one Playwright `test()` that calls `fetchNextTermin` for all 49 Anliegen exactly once (no retry loop), classifies each as `available`/`no-slot`/`error`, prints a console summary grouped by tab, and saves `reports/availability-report-<timestamp>.{md,json,html}` (gitignored) — the `.html` is a styled, color-coded view grouped by tab.
-- `scripts/run-all-monitors.js` — spawns each generated spec file as its own `npx playwright test <file>` child process; forwards `SIGTERM`/`SIGINT` to every child so `docker stop` exits promptly instead of waiting out the stop-timeout.
-- `src/termin-utils.ts` — `parseTerminDate`/`classifyFailure`, pure helpers shared by `anliegen-monitor.ts`, `availability-report.spec.ts`, and the sync job below (deliberately Playwright-free so the sync job doesn't need to import test-runner code).
 
 ### Supabase sync job (historical persistence)
 
-A fourth, independent process — **never touches the 49 notification monitors above**. Models itself on `availability-report.spec.ts` (single attempt per Anliegen, same `fetchNextTermin`/`classifyFailure`) but loops forever like a monitor instead of exiting after one pass, and writes to Supabase instead of notifying:
+A separate, independent process — **never touches the notification monitor above**, deliberately kept as its own service (its own in-memory `lastKnown` map, its own gap timer) even though the sweep logic is structurally identical. Models itself on `availability-report.spec.ts` (single attempt per Anliegen, same `fetchNextTermin`/`classifyFailure`) but loops forever like a monitor instead of exiting after one pass, and writes to Supabase instead of notifying:
 
 - `supabase/migrations/0001_availability_schema.sql` — `current_status` (1 row per slug, upserted every sweep) and `availability_events` (append-only, one row per status *transition*, not per sweep) tables, plus `availability_windows`/`daily_availability_summary` views for the dashboard. RLS: public `select`, no `insert`/`update` for anon/authenticated — only the service-role key (used by the sync job) can write.
 - `src/supabase-client.ts` — service-role client, built from `SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY`.
@@ -102,5 +92,5 @@ Most Anliegen have no open slot most of the time. `getNextTermin()` timing out �
 ### Key Files
 
 - `playwright.config.ts` — Chromium only, HTML reporter, 2 retries on CI
-- `src/anliegen-config.ts` — add/remove/rename an Anliegen here, then regenerate
+- `src/anliegen-config.ts` — add/remove/rename an Anliegen here (no regeneration step needed anymore)
 - `media/` — audio notification files

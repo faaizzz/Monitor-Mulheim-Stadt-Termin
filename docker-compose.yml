@@ -1,7 +1,7 @@
 services:
   monitor:
     build: .
-    command: node scripts/run-all-monitors.js
+    command: npx playwright test tests/notify-monitor.spec.ts
     env_file: .env
     init: true
     restart: unless-stopped

@@ -4,18 +4,6 @@ export interface AnliegenConfig {
   slug: string;
 }
 
-// Folder name under tests/anliegen/ for each category tab.
-export const TAB_SLUGS: Record<string, string> = {
-  'Meldewesen': 'meldewesen',
-  'Allgemeine Ausländerangelegenheiten': 'allgemeine-aufenthalt',
-  'Bürger der Europäischen Union': 'eu-buerger',
-  'Visaangelegenheiten': 'visa',
-  'Mitarbeiter der Max-Planck-Institute': 'max-planck',
-  'Studierende und Anerkennung der Berufsqualifikation': 'studierende',
-  'Einbürgerung': 'einbuergerung',
-  'Asylangelegenheiten und Rückkehrmanagement': 'asyl',
-};
-
 // Full enumeration of every appointment type ("Anliegen") offered for
 // Ausländeramt (md=9) at https://terminvergabe.muelheim-ruhr.de/select2?md=9,
 // grouped by category tab. `name` must match the live site's
