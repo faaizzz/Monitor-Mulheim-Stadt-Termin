@@ -148,7 +148,7 @@ Unlike the monitors above (which loop forever), this checks every Anliegen exact
 ```bash
 npx playwright test tests/availability-report.spec.ts
 ```
-Takes several minutes (one sequential pass through all 49). Prints a summary grouped by tab to the console, and saves a timestamped `reports/availability-report-<timestamp>.md` and `.json` (gitignored). Each item is classified `available` (with the Termin date), `no-slot` (the expected "Nächster Termin" timeout), or `error` (anything else — a real selector break worth investigating).
+Takes several minutes (one sequential pass through all 49). Prints a summary grouped by tab to the console, and saves a timestamped `reports/availability-report-<timestamp>.{md,json,html}` (gitignored). Each item is classified `available` (with the Termin date), `no-slot` (the expected "Nächster Termin" timeout), or `error` (anything else — a real selector break worth investigating). Open the `.html` file in a browser for a readable, color-coded view grouped by tab; the `.json` is for programmatic use.
 
 ## Notifications
 

@@ -51,7 +51,7 @@ Ausländeramt (`md=9`) offers 49 appointment types ("Anliegen") across 8 categor
 - `src/anliegen-monitor.ts` — `defineAnliegenMonitor(config)`: registers one Playwright `test()` per Anliegen with the infinite 60s-retry loop (reads `BEFORE_DATE` env var to optionally skip slots on/after a cutoff date). A found (and date-filter-passing) slot is terminal — notification failures are caught/logged but don't trigger re-running the flow.
 - `src/notifier.ts` — beep + terminal bell + Telegram on slot found.
 - `tests/anliegen/<tab>/<slug>.spec.ts` — 49 generated files in 8 per-tab folders, each just importing a config entry by slug and calling `defineAnliegenMonitor`. Regenerate with `scripts/generate-anliegen-tests.js` if `anliegen-config.ts` changes.
-- `tests/availability-report.spec.ts` — one Playwright `test()` that calls `fetchNextTermin` for all 49 Anliegen exactly once (no retry loop), classifies each as `available`/`no-slot`/`error`, prints a console summary grouped by tab, and saves `reports/availability-report-<timestamp>.{md,json}` (gitignored).
+- `tests/availability-report.spec.ts` — one Playwright `test()` that calls `fetchNextTermin` for all 49 Anliegen exactly once (no retry loop), classifies each as `available`/`no-slot`/`error`, prints a console summary grouped by tab, and saves `reports/availability-report-<timestamp>.{md,json,html}` (gitignored) — the `.html` is a styled, color-coded view grouped by tab.
 - `scripts/run-all-monitors.js` — spawns each generated spec file as its own `npx playwright test <file>` child process.
 
 ### Flow per Anliegen
