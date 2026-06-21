@@ -37,9 +37,9 @@ src/
   anliegen-config.ts      <- single source of truth: every {tab, name, slug} Anliegen
   anliegen-monitor.ts     <- shared test()-with-infinite-retry-loop runner
 scripts/
-  generate-anliegen-tests.js  <- (re)generates tests/anliegen/*.spec.ts from anliegen-config.ts
+  generate-anliegen-tests.js  <- (re)generates tests/anliegen/<tab>/*.spec.ts from anliegen-config.ts
   run-all-monitors.js         <- spawns one independent process per monitor
-tests/anliegen/*.spec.ts <- one thin generated spec file per Anliegen (49 total)
+tests/anliegen/<tab>/*.spec.ts <- one thin generated spec file per Anliegen, one subfolder per category tab (49 files across 8 folders)
 ```
 
 If the portal adds, removes, or renames an Anliegen, update `src/anliegen-config.ts` and re-run:
@@ -49,15 +49,15 @@ node scripts/generate-anliegen-tests.js
 
 ## Monitors
 
-All 49 Anliegen, grouped by the 8 category tabs on the portal. Each maps to `tests/anliegen/<slug>.spec.ts`.
+All 49 Anliegen, grouped by the 8 category tabs on the portal. Each tab has its own folder under `tests/anliegen/`.
 
-### Meldewesen
+### Meldewesen — `tests/anliegen/meldewesen/`
 - Anmeldung Einzelperson — `meldewesen-anmeldung-einzelperson`
 - Anmeldung EU-Bürger — `meldewesen-anmeldung-eu-buerger`
 - Anmeldung Familie — `meldewesen-anmeldung-familie`
 - Ummeldung / Abmeldung — `meldewesen-ummeldung-abmeldung`
 
-### Allgemeine Ausländerangelegenheiten
+### Allgemeine Ausländerangelegenheiten — `tests/anliegen/allgemeine-aufenthalt/`
 - Erteilung Aufenthaltserlaubnis oder BlueCard/EU — `allgemeine-aufenthalt-erteilung-aufenthaltserlaubnis-oder-bluecard-eu`
 - Verlängerung Aufenthaltserlaubnis oder BlueCard/EU — `allgemeine-aufenthalt-verlaengerung-aufenthaltserlaubnis-oder-bluecard-eu`
 - Auflagenänderung bzgl. Wohnsitznahme — `allgemeine-aufenthalt-auflagenaenderung-bzgl-wohnsitznahme`
@@ -72,16 +72,16 @@ All 49 Anliegen, grouped by the 8 category tabs on the portal. Each maps to `tes
 - Elektronische Aufenthaltstitel (eAT) > Aktivierung Online Funktion / PIN-Änderung — `allgemeine-aufenthalt-elektronische-aufenthaltstitel-eat-aktivierung-online-pin`
 - Abgabe einer Verpflichtungserklärung — `allgemeine-aufenthalt-abgabe-verpflichtungserklaerung`
 
-### Bürger der Europäischen Union
+### Bürger der Europäischen Union — `tests/anliegen/eu-buerger/`
 - Beratung — `eu-buerger-beratung`
 - Einreichen Dokumente EU-Bürger — `eu-buerger-einreichen-dokumente-eu-buerger`
 
-### Visaangelegenheiten
+### Visaangelegenheiten — `tests/anliegen/visa/`
 - Anmeldung Einzelperson mit Visum — `visa-anmeldung-einzelperson-mit-visum`
 - Anmeldung Familie mit Visum — `visa-anmeldung-familie-mit-visum`
 - Beratung Familienzusammenführung — `visa-beratung-familienzusammenfuehrung`
 
-### Mitarbeiter der Max-Planck-Institute
+### Mitarbeiter der Max-Planck-Institute — `tests/anliegen/max-planck/`
 - Anmeldung — `max-planck-anmeldung`
 - Ummeldung / Abmeldung — `max-planck-ummeldung-abmeldung`
 - Erteilung Aufenthaltserlaubnis — `max-planck-erteilung-aufenthaltserlaubnis`
@@ -89,7 +89,7 @@ All 49 Anliegen, grouped by the 8 category tabs on the portal. Each maps to `tes
 - Erteilung einer Niederlassungserlaubnis oder Blaue Karte EU — `max-planck-erteilung-niederlassungserlaubnis-oder-blaue-karte-eu`
 - Allgemeine Beratung — `max-planck-allgemeine-beratung`
 
-### Studierende und Anerkennung der Berufsqualifikation
+### Studierende und Anerkennung der Berufsqualifikation — `tests/anliegen/studierende/`
 - Anmeldung — `studierende-anmeldung`
 - Ummeldung / Abmeldung — `studierende-ummeldung-abmeldung`
 - Erteilung Aufenthaltserlaubnis — `studierende-erteilung-aufenthaltserlaubnis`
@@ -101,11 +101,11 @@ All 49 Anliegen, grouped by the 8 category tabs on the portal. Each maps to `tes
 - Elektronische Aufenthaltstitel (eAT) > Aktivierung Online Funktion / PIN-Änderung — `studierende-elektronische-aufenthaltstitel-eat-aktivierung-online-pin`
 - Abgabe einer Verpflichtungserklärung zur Sicherung des Lebensunterhaltesbei Studierenden — `studierende-abgabe-verpflichtungserklaerung-lebensunterhalt`
 
-### Einbürgerung
+### Einbürgerung — `tests/anliegen/einbuergerung/`
 - Beratung zur Einbürgerung — `einbuergerung-beratung-zur-einbuergerung`
 - Abgabe des Einbürgerungsantrages — `einbuergerung-abgabe-einbuergerungsantrag`
 
-### Asylangelegenheiten und Rückkehrmanagement
+### Asylangelegenheiten und Rückkehrmanagement — `tests/anliegen/asyl/`
 - Beratung allgemein — `asyl-beratung-allgemein`
 - Beratung freiwillige Ausreise — `asyl-beratung-freiwillige-ausreise`
 - Ersterteilung einer Aufenthaltsgestattung — `asyl-ersterteilung-aufenthaltsgestattung`
@@ -122,10 +122,10 @@ There are no npm scripts — use `npx playwright` directly.
 
 ```bash
 # Run a single monitor (one Anliegen)
-npx playwright test tests/anliegen/meldewesen-anmeldung-einzelperson.spec.ts
+npx playwright test tests/anliegen/meldewesen/meldewesen-anmeldung-einzelperson.spec.ts
 
 # Run with visible browser
-npx playwright test tests/anliegen/meldewesen-anmeldung-einzelperson.spec.ts --headed
+npx playwright test tests/anliegen/meldewesen/meldewesen-anmeldung-einzelperson.spec.ts --headed
 
 # List every monitor available
 npx playwright test --list
@@ -138,7 +138,7 @@ Each monitor runs forever, polling every 60 seconds. `npx playwright test` witho
 
 Optionally filter by a cutoff date — only alerts if the next slot is **before** the given date:
 ```bash
-BEFORE_DATE=2026-06-01 npx playwright test tests/anliegen/meldewesen-ummeldung-abmeldung.spec.ts
+BEFORE_DATE=2026-06-01 npx playwright test tests/anliegen/meldewesen/meldewesen-ummeldung-abmeldung.spec.ts
 ```
 `BEFORE_DATE` accepts `YYYY-MM-DD` format. `run.js` wraps this as a `--before-date=YYYY-MM-DD` flag for any single spec file.
 

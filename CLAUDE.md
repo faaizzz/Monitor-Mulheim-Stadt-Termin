@@ -16,10 +16,10 @@ npm install
 npx playwright install --with-deps
 
 # Run a single monitor
-npx playwright test tests/anliegen/meldewesen-anmeldung-einzelperson.spec.ts
+npx playwright test tests/anliegen/meldewesen/meldewesen-anmeldung-einzelperson.spec.ts
 
 # Run with visible browser
-npx playwright test tests/anliegen/meldewesen-anmeldung-einzelperson.spec.ts --headed
+npx playwright test tests/anliegen/meldewesen/meldewesen-anmeldung-einzelperson.spec.ts --headed
 
 # List every monitor
 npx playwright test --list
@@ -27,7 +27,7 @@ npx playwright test --list
 # Run every monitor at once, each as its own OS process
 node scripts/run-all-monitors.js
 
-# Regenerate tests/anliegen/*.spec.ts after editing src/anliegen-config.ts
+# Regenerate tests/anliegen/<tab>/*.spec.ts after editing src/anliegen-config.ts
 node scripts/generate-anliegen-tests.js
 
 # View HTML report after run
@@ -43,10 +43,10 @@ There are no npm scripts — use `npx playwright` directly, or the scripts above
 Ausländeramt (`md=9`) offers 49 appointment types ("Anliegen") across 8 category tabs. Rather than duplicating the navigate/select/confirm/notify flow 49 times, it's built as a Page Object Model:
 
 - `src/pages/AnliegenPage.ts` — the booking-flow Page Object: `open()`, `selectAnliegen(tab, name)`, `confirmDocumentsIfPresent()`, `getNextTermin()`.
-- `src/anliegen-config.ts` — single source of truth: every `{ tab, name, slug }` Anliegen. `name` must match the live site's `Erhöhen der Anzahl des Anliegens <name>` accessible button label exactly.
+- `src/anliegen-config.ts` — single source of truth: every `{ tab, name, slug }` Anliegen, plus `TAB_SLUGS` (tab name → folder name). `name` must match the live site's `Erhöhen der Anzahl des Anliegens <name>` accessible button label exactly.
 - `src/anliegen-monitor.ts` — `defineAnliegenMonitor(config)`: registers one Playwright `test()` per Anliegen with the infinite 60s-retry loop (reads `BEFORE_DATE` env var to optionally skip slots on/after a cutoff date).
 - `src/notifier.ts` — beep + terminal bell + Telegram on slot found.
-- `tests/anliegen/<slug>.spec.ts` — 49 generated files, each just importing a config entry by slug and calling `defineAnliegenMonitor`. Regenerate with `scripts/generate-anliegen-tests.js` if `anliegen-config.ts` changes.
+- `tests/anliegen/<tab>/<slug>.spec.ts` — 49 generated files in 8 per-tab folders, each just importing a config entry by slug and calling `defineAnliegenMonitor`. Regenerate with `scripts/generate-anliegen-tests.js` if `anliegen-config.ts` changes.
 - `scripts/run-all-monitors.js` — spawns each generated spec file as its own `npx playwright test <file>` child process.
 
 ### Flow per Anliegen

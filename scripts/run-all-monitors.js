@@ -15,10 +15,12 @@ const logDir = path.join(repoRoot, 'logs');
 
 fs.mkdirSync(logDir, { recursive: true });
 
-const files = fs.readdirSync(specDir).filter((f) => f.endsWith('.spec.ts'));
+const files = fs
+  .readdirSync(specDir, { recursive: true })
+  .filter((f) => f.endsWith('.spec.ts'));
 
 for (const file of files) {
-  const slug = file.replace('.spec.ts', '');
+  const slug = path.basename(file, '.spec.ts');
   const logFd = fs.openSync(path.join(logDir, `${slug}.log`), 'a');
   spawn('npx', ['playwright', 'test', path.join('tests', 'anliegen', file)], {
     cwd: repoRoot,
