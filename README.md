@@ -134,7 +134,7 @@ npx playwright test --list
 node scripts/run-all-monitors.js
 ```
 
-Each monitor runs forever, polling every 60 seconds. `npx playwright test` without a path argument is **not** recommended for this repo's monitors — Playwright's worker pool is bounded (CPU core count by default), so a handful of monitors would run forever while the rest starve in the queue. Use `scripts/run-all-monitors.js` to run everything, since it gives each monitor its own OS process instead of relying on Playwright's worker pool.
+Each monitor runs forever, polling every 10 minutes by default — override with `MONITOR_INTERVAL_MS` (milliseconds) in `.env`. `npx playwright test` without a path argument is **not** recommended for this repo's monitors — Playwright's worker pool is bounded (CPU core count by default), so a handful of monitors would run forever while the rest starve in the queue. Use `scripts/run-all-monitors.js` to run everything, since it gives each monitor its own OS process instead of relying on Playwright's worker pool.
 
 Optionally filter by a cutoff date — only alerts if the next slot is **before** the given date:
 ```bash
@@ -156,7 +156,7 @@ Unlike the monitors (which stop after finding a slot) and the one-shot report (w
 ```bash
 npx playwright test tests/availability-sync.spec.ts
 ```
-Each pass upserts one row per Anliegen into `current_status` (always-fresh snapshot) and appends a row to `availability_events` only when a status actually changed since the last pass (so restarting the job doesn't create spurious history). See `supabase/migrations/0001_availability_schema.sql` for the schema, and the [`dashboard/`](dashboard/) app for a UI on top of it. Requires `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` in `.env` — see "Supabase setup" below. Sweep gap defaults to 60s; override with `SYNC_GAP_MS`.
+Each pass upserts one row per Anliegen into `current_status` (always-fresh snapshot) and appends a row to `availability_events` only when a status actually changed since the last pass (so restarting the job doesn't create spurious history). See `supabase/migrations/0001_availability_schema.sql` for the schema, and the [`dashboard/`](dashboard/) app for a UI on top of it. Requires `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` in `.env` — see "Supabase setup" below. Sweep gap defaults to 10 minutes; override with `SYNC_GAP_MS` (milliseconds) in `.env`.
 
 ## Supabase setup
 
@@ -218,8 +218,8 @@ When a slot is found, a monitor triggers:
 ## Notes
 
 - The target site is third-party and not under our control — selectors can break without warning when the site updates. We've already seen this: the portal's internal `concerns_accordion-*` / `button-plus-*` element IDs regenerate periodically, which is why `AnliegenPage` uses role-based selectors (tab/button accessible names) instead of those IDs.
-- Most Anliegen will show no slot most of the time. Seeing `waiting for locator('text=Nächster Termin') to be visible` time out in the logs is the expected, correct signal — it means "no slot yet," and the monitor will retry in 60 seconds.
-- Scripts retry every 60 seconds on failure (including "no slot found").
+- Most Anliegen will show no slot most of the time. Seeing `waiting for locator('text=Nächster Termin') to be visible` time out in the logs is the expected, correct signal — it means "no slot yet," and the monitor will retry after `MONITOR_INTERVAL_MS` (default 10 minutes).
+- Scripts retry on failure (including "no slot found") after `MONITOR_INTERVAL_MS`, default 10 minutes.
 
 ## License
 

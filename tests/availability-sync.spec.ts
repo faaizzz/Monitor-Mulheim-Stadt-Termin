@@ -7,7 +7,7 @@ import { loadLastKnownStatus, syncOnce, SyncResult } from '../src/availability-s
 
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
-const SYNC_GAP_MS = process.env.SYNC_GAP_MS ? parseInt(process.env.SYNC_GAP_MS, 10) : 60000;
+const SYNC_GAP_MS = process.env.SYNC_GAP_MS ? parseInt(process.env.SYNC_GAP_MS, 10) : 600_000; // 10 minutes
 
 test('Continuously sync availability for all Anliegen to Supabase', async ({ page }) => {
   test.setTimeout(0); // Runs forever: one sweep of all 49 Anliegen, then a fixed gap, repeat.
