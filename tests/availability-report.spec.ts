@@ -3,6 +3,7 @@ import { mkdirSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { ANLIEGEN_CONFIG } from '../src/anliegen-config';
 import { fetchNextTermin } from '../src/fetch-next-termin';
+import { classifyFailure } from '../src/termin-utils';
 
 export interface ReportRow {
   tab: string;
@@ -11,13 +12,6 @@ export interface ReportRow {
   status: 'available' | 'no-slot' | 'error';
   termin?: string;
   error?: string;
-}
-
-// "Nächster Termin" timing out is the expected signal for "no slot right
-// now" (see CLAUDE.md). Any other failure (tab/button/Weiter/dialog not
-// found) means a selector actually broke — report those as real errors.
-function classifyFailure(message: string): 'no-slot' | 'error' {
-  return message.includes('Nächster Termin') ? 'no-slot' : 'error';
 }
 
 function printConsoleSummary(results: ReportRow[]): void {

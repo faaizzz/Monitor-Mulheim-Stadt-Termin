@@ -19,13 +19,25 @@ const files = fs
   .readdirSync(specDir, { recursive: true })
   .filter((f) => f.endsWith('.spec.ts'));
 
+const children = [];
+
 for (const file of files) {
   const slug = path.basename(file, '.spec.ts');
   const logFd = fs.openSync(path.join(logDir, `${slug}.log`), 'a');
-  spawn('npx', ['playwright', 'test', path.join('tests', 'anliegen', file)], {
+  const child = spawn('npx', ['playwright', 'test', path.join('tests', 'anliegen', file)], {
     cwd: repoRoot,
     stdio: ['ignore', logFd, logFd],
   });
+  children.push(child);
 }
 
 console.log(`Spawned ${files.length} monitor processes. Logs in ./logs/`);
+
+// Forward shutdown signals to every child so `docker stop` doesn't have to
+// wait out the full stop-timeout and SIGKILL orphaned Chromium processes.
+function shutdown(signal) {
+  for (const child of children) child.kill(signal);
+  process.exit(0);
+}
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));

@@ -1,0 +1,24 @@
+services:
+  monitor:
+    build: .
+    command: node scripts/run-all-monitors.js
+    env_file: .env
+    init: true
+    restart: unless-stopped
+
+  sync:
+    build: .
+    command: npx playwright test tests/availability-sync.spec.ts
+    env_file: .env
+    init: true
+    restart: unless-stopped
+
+  dashboard:
+    build:
+      context: ./dashboard
+      args:
+        VITE_SUPABASE_URL: ${SUPABASE_URL}
+        VITE_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+    ports:
+      - "8080:80"
+    restart: unless-stopped

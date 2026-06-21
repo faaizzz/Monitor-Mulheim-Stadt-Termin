@@ -2,16 +2,13 @@ import { test } from '@playwright/test';
 import { AnliegenConfig } from './anliegen-config';
 import { fetchNextTermin } from './fetch-next-termin';
 import { notifySlotFound } from './notifier';
-
-// Optional: set BEFORE_DATE=YYYY-MM-DD env var to only alert when slot is before that date
-function parseTerminDate(text: string): Date | null {
-  const match = text.match(/(\d{2})\.(\d{2})\.(\d{4})/);
-  if (!match) return null;
-  const [, day, month, year] = match;
-  return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-}
+import { parseTerminDate } from './termin-utils';
 
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+const MONITOR_INTERVAL_MS = process.env.MONITOR_INTERVAL_MS
+  ? parseInt(process.env.MONITOR_INTERVAL_MS, 10)
+  : 600_000; // 10 minutes
 
 async function checkOnce(page: import('@playwright/test').Page, config: AnliegenConfig): Promise<void> {
   const content = await fetchNextTermin(page, config);
@@ -46,8 +43,8 @@ export function defineAnliegenMonitor(config: AnliegenConfig): void {
         success = true;
       } catch (error: any) {
         const currentTime = new Date().toLocaleString();
-        console.error(`[${currentTime}] Retrying in 60s:`, error.message);
-        await sleep(60000);
+        console.error(`[${currentTime}] Retrying in ${MONITOR_INTERVAL_MS}ms:`, error.message);
+        await sleep(MONITOR_INTERVAL_MS);
       }
     }
   });
