@@ -6,6 +6,7 @@ node_modules/
 /blob-report/
 /playwright/.cache/
 /logs/
+/reports/
 
 # Secrets
 .env

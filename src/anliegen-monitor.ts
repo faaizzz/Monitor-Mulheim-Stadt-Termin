@@ -1,6 +1,6 @@
 import { test } from '@playwright/test';
 import { AnliegenConfig } from './anliegen-config';
-import { AnliegenPage } from './pages/AnliegenPage';
+import { fetchNextTermin } from './fetch-next-termin';
 import { notifySlotFound } from './notifier';
 
 // Optional: set BEFORE_DATE=YYYY-MM-DD env var to only alert when slot is before that date
@@ -14,11 +14,7 @@ function parseTerminDate(text: string): Date | null {
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 async function checkOnce(page: import('@playwright/test').Page, config: AnliegenConfig): Promise<void> {
-  const anliegenPage = new AnliegenPage(page);
-  await anliegenPage.open();
-  await anliegenPage.selectAnliegen(config.tab, config.name);
-  await anliegenPage.confirmDocumentsIfPresent();
-  const content = await anliegenPage.getNextTermin();
+  const content = await fetchNextTermin(page, config);
 
   console.log(`Next Termin for ${config.name} exists`);
 

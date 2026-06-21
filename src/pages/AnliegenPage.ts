@@ -15,9 +15,13 @@ export class AnliegenPage {
   }
 
   async selectAnliegen(tab: string, name: string): Promise<void> {
-    await this.page.getByRole('tab', { name: tab }).click({ timeout: 5000 });
+    // exact: true matters here — several Anliegen names are text-prefixes of
+    // another Anliegen in the same tab (e.g. "Erteilung Niederlassungserlaubnis"
+    // vs "...für Fachkräfte"), and getByRole's name match is substring-based
+    // by default, which causes a strict-mode "resolved to 2 elements" error.
+    await this.page.getByRole('tab', { name: tab, exact: true }).click({ timeout: 5000 });
     await this.page
-      .getByRole('button', { name: `Erhöhen der Anzahl des Anliegens ${name}` })
+      .getByRole('button', { name: `Erhöhen der Anzahl des Anliegens ${name}`, exact: true })
       .click({ timeout: 5000 });
 
     await this.page.waitForSelector('#WeiterButton', { timeout: 5000 });

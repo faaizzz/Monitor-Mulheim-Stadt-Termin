@@ -30,6 +30,9 @@ node scripts/run-all-monitors.js
 # Regenerate tests/anliegen/<tab>/*.spec.ts after editing src/anliegen-config.ts
 node scripts/generate-anliegen-tests.js
 
+# One-shot: check all 49 Anliegen exactly once (no retrying) and generate a report
+npx playwright test tests/availability-report.spec.ts
+
 # View HTML report after run
 npx playwright show-report
 ```
@@ -44,15 +47,17 @@ Ausländeramt (`md=9`) offers 49 appointment types ("Anliegen") across 8 categor
 
 - `src/pages/AnliegenPage.ts` — the booking-flow Page Object: `open()`, `selectAnliegen(tab, name)`, `confirmDocumentsIfPresent()`, `getNextTermin()`.
 - `src/anliegen-config.ts` — single source of truth: every `{ tab, name, slug }` Anliegen, plus `TAB_SLUGS` (tab name → folder name). `name` must match the live site's `Erhöhen der Anzahl des Anliegens <name>` accessible button label exactly.
-- `src/anliegen-monitor.ts` — `defineAnliegenMonitor(config)`: registers one Playwright `test()` per Anliegen with the infinite 60s-retry loop (reads `BEFORE_DATE` env var to optionally skip slots on/after a cutoff date).
+- `src/fetch-next-termin.ts` — `fetchNextTermin(page, config)`: the single-attempt booking-flow call (`open` → `selectAnliegen` → `confirmDocumentsIfPresent` → `getNextTermin`), shared by both the infinite monitors and the one-shot report below. Throws if no slot / a selector breaks.
+- `src/anliegen-monitor.ts` — `defineAnliegenMonitor(config)`: registers one Playwright `test()` per Anliegen with the infinite 60s-retry loop (reads `BEFORE_DATE` env var to optionally skip slots on/after a cutoff date). A found (and date-filter-passing) slot is terminal — notification failures are caught/logged but don't trigger re-running the flow.
 - `src/notifier.ts` — beep + terminal bell + Telegram on slot found.
 - `tests/anliegen/<tab>/<slug>.spec.ts` — 49 generated files in 8 per-tab folders, each just importing a config entry by slug and calling `defineAnliegenMonitor`. Regenerate with `scripts/generate-anliegen-tests.js` if `anliegen-config.ts` changes.
+- `tests/availability-report.spec.ts` — one Playwright `test()` that calls `fetchNextTermin` for all 49 Anliegen exactly once (no retry loop), classifies each as `available`/`no-slot`/`error`, prints a console summary grouped by tab, and saves `reports/availability-report-<timestamp>.{md,json}` (gitignored).
 - `scripts/run-all-monitors.js` — spawns each generated spec file as its own `npx playwright test <file>` child process.
 
 ### Flow per Anliegen
 
 1. `open()` — navigate to the appointment URL, decline cookies if prompted
-2. `selectAnliegen(tab, name)` — click the tab, click the "Erhöhen der Anzahl..." button for that Anliegen, click Weiter
+2. `selectAnliegen(tab, name)` — click the tab, click the "Erhöhen der Anzahl..." button for that Anliegen, click Weiter. Uses `exact: true` on both `getByRole` calls — several Anliegen names are text-prefixes of another in the same tab (e.g. "Erteilung Niederlassungserlaubnis" vs "...für Fachkräfte"), and Playwright's default substring name-matching would otherwise hit a strict-mode "resolved to 2 elements" error.
 3. `confirmDocumentsIfPresent()` — if the `Hinweis` modal (`#TevisDialog`) appears, check every `.documentlist_item_cb` via `page.evaluate` (direct click fails — checkboxes report "outside viewport" despite being visible) and click `#OKButton`. Some Anliegen show no modal at all; this step is a no-op then.
 4. `getNextTermin()` — wait for `text=Nächster Termin`, read the date from `dl/dd[4]`
 
