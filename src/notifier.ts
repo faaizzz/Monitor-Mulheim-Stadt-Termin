@@ -7,9 +7,16 @@ export async function notifySlotFound(label: string, content: string): Promise<v
   console.log(`Next Termin for ${label} exists. Date Time: ${content}`);
   console.log('');
 
-  play.play('media/beep.wav', (err: any) => {
-    if (err) console.error('Error playing audio:', err);
-  });
+  // play-sound throws synchronously (not just via the callback) when no audio
+  // player binary exists at all, e.g. on a headless VPS — must not block the
+  // notification channels below.
+  try {
+    play.play('media/beep.wav', (err: any) => {
+      if (err) console.error('Error playing audio:', err);
+    });
+  } catch (err) {
+    console.error('Error playing audio:', err);
+  }
 
   await sendTelegramMessage(`Next Termin for ${label} exists. Date Time: ${content}`);
 }
