@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mhtermin-dashboard
+  namespace: mhtermin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mhtermin-dashboard
+  template:
+    metadata:
+      labels:
+        app: mhtermin-dashboard
+    spec:
+      imagePullSecrets:
+        - name: ghcr-credentials
+      containers:
+        - name: dashboard
+          image: ghcr.io/faaizzz/mhtermin-dashboard:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mhtermin-dashboard
+  namespace: mhtermin
+spec:
+  selector:
+    app: mhtermin-dashboard
+  ports:
+    - port: 80
+      targetPort: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mhtermin-dashboard
+  namespace: mhtermin
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: mhtermin.razizu.cloud
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: mhtermin-dashboard
+                port:
+                  number: 80
+  tls:
+    - hosts:
+        - mhtermin.razizu.cloud
+      secretName: mhtermin-dashboard-tls

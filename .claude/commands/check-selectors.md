@@ -21,10 +21,9 @@ Load the Chrome browser tools if they're deferred:
 
 ## If something has drifted
 
-- Update `src/anliegen-config.ts` (tab/name strings) and/or `src/pages/AnliegenPage.ts` (selectors) to match the live site.
-- If `ANLIEGEN_CONFIG` entries changed (added/removed/renamed), run `node scripts/generate-anliegen-tests.js` to regenerate `tests/anliegen/<tab>/*.spec.ts`.
-- Verify with `npx playwright test --list` (expect the same total count, no duplicates) and run at least one known-working monitor end-to-end, e.g.:
-  `timeout 60 npx playwright test tests/anliegen/meldewesen/meldewesen-anmeldung-einzelperson.spec.ts --reporter=list`
+- Update `src/anliegen-config.ts` (tab/name strings) and/or `src/pages/AnliegenPage.ts` (selectors) to match the live site. Also update `dashboard/src/tabSlugs.ts` if a tab name changed (it duplicates the tab list since the dashboard has no access to this repo's `src/`).
+- Verify with `npx playwright test --list` (expect the same total count, no duplicates) and run the sequential monitor/sync briefly end-to-end, e.g.:
+  `timeout 60 npx playwright test tests/notify-monitor.spec.ts --reporter=list`
 - A `waiting for locator('text=Nächster Termin') to be visible` timeout on its own is **expected** (no slot currently available) — not a sign of drift. Only earlier-step failures (tab/button/Weiter/dialog not found) indicate a real selector break.
 
 ## Report back

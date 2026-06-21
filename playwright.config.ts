@@ -32,8 +32,8 @@ export default defineConfig({
     trace: 'on-first-retry',
 
     /* Cap every action (click, fill, etc.) so a stuck/stale element can't hang
-       a monitor for tens of minutes — it'll fail fast and let the 60s retry
-       loop in anliegen-monitor.ts take over instead. */
+       a monitor for tens of minutes — it'll fail fast and let the retry loop
+       in notify-monitor.spec.ts/availability-sync.spec.ts take over instead. */
     actionTimeout: 10000,
   },
 
