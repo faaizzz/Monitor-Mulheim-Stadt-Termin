@@ -30,6 +30,11 @@ export default defineConfig({
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
+
+    /* Cap every action (click, fill, etc.) so a stuck/stale element can't hang
+       a monitor for tens of minutes — it'll fail fast and let the 60s retry
+       loop in anliegen-monitor.ts take over instead. */
+    actionTimeout: 10000,
   },
 
   /* Configure projects for major browsers */
